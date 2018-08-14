@@ -20,21 +20,21 @@ Settings.settings_options = {
 
 Settings.panels = {};
 Settings.panels.controls = document.createElement("div");
-Settings.panels.controls.setAttribute("class","guppy_help");
+Settings.panels.controls.setAttribute("class","guppy_help guppy");
 Settings.panels.controls.style = "padding:10px;border:1px solid black; background-color: #fff;position:absolute;top:0;left:0;display:none;";
 Settings.panels.controls.innerHTML = "<p>Start typing the name of a mathematical function to automatically insert it.  </p><p>(For example, \"sqrt\" for root, \"mat\" for matrix, or \"defi\" for definite integral.)</p>\n\
 <style>div.guppy_help td{ vertical-align:top;padding: 2px;}</style>\n\
 <h3>Controls</h3><table id=\"guppy_help_table\"><tr><td><b>Press...</b></td><td><b>...to do</b></td></tr></table>";
 
 Settings.panels.symbols = document.createElement("div");
-Settings.panels.symbols.setAttribute("class","guppy_help");
+Settings.panels.symbols.setAttribute("class","guppy_help guppy");
 Settings.panels.symbols.style = "padding:10px;border:1px solid black; background-color: #fff;position:absolute;top:0;left:0;display:none;";
 Settings.panels.symbols.innerHTML = "<p>Start typing the name of a mathematical function to automatically insert it.  </p><p>(For example, \"sqrt\" for root, \"mat\" for matrix, or \"defi\" for definite integral.)</p>\n\
 <style>div.guppy_help td{ vertical-align:top;padding: 2px;}</style>\n\
 <h3>Symbols</h3><table id=\"guppy_syms_table\"><tr><td><b>Type...</b></td><td><b>...to get</b></td></tr></table>";
 
 Settings.panels.settings = document.createElement("div");
-Settings.panels.settings.setAttribute("class","guppy_help");
+Settings.panels.settings.setAttribute("class","guppy_help guppy");
 Settings.panels.settings.style = "padding:10px;border:1px solid black; background-color: #fff;position:absolute;top:0;left:0;display:none;";
 Settings.panels.settings.innerHTML = "<p>Global settings: </p>\n\
 <style>div.guppy_help td{ vertical-align:top;padding: 2px;}</style>\n\
@@ -114,7 +114,7 @@ Settings.init = function(symbols){
         make_x(Settings.panels[Settings.div_names[i]]);
         document.body.appendChild(Settings.panels[Settings.div_names[i]])
     }
-    
+
     make_row("guppy_help_table","left/right arrows","Move cursor");
     make_row("guppy_help_table","shift+left/right arrows","Select region")
     make_row("guppy_help_table","ctrl+a","Select all");
@@ -127,8 +127,8 @@ Settings.init = function(symbols){
     make_row("guppy_help_table","ctrl+backspace","Delete current entry in list or column in matrix");
     make_row("guppy_help_table","ctrl+shift+backspace","Delete current row in matrix");
 
-    
-    
+
+
     for(var s in symbols){
         var latex = Symbols.add_blanks(symbols[s].output.latex, "\\blue{[?]}");
         var row = make_row("guppy_syms_table",s," ");

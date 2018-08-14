@@ -4,8 +4,8 @@
     box-shadow: 1px 1px 1px 0 lightgray inset;
     cursor: text;
     background-color: #ffffff;
-    color:#000;
-    position:relative;
+    color: #000;
+    position: relative;
 }
 
 .guppy_inactive {
@@ -14,8 +14,8 @@
     box-shadow: 1px 1px 1px 0 lightgray inset;
     cursor: text;
     background-color: #fafafa;
-    color:#000;
-    position:relative;
+    color: #000;
+    position: relative;
 }
 
 .guppy_text_current {
@@ -23,8 +23,8 @@
 }
 
 .guppy_active .main_cursor {
-  animation: blink-animation 1s steps(2, start) infinite;
-  -webkit-animation: blink-animation 1s steps(2, start) infinite;
+    animation: blink-animation 1s steps(2, start) infinite;
+    -webkit-animation: blink-animation 1s steps(2, start) infinite;
 }
 
 .guppy_active .guppy_buttons {
@@ -35,31 +35,33 @@
     display: none;
 }
 
-
 .guppy_buttons {
-    position:absolute;
-    bottom:0;
-    right:0;
-    padding:0 3px 3px 0;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0 3px 3px 0;
 }
 
-.guppy_buttons img{
-    cursor:pointer;
-    height:16px;
-    width:16px;
-    padding:3px;
+.guppy_buttons img {
+    cursor: pointer;
+    height: 16px;
+    width: 16px;
+    padding: 3px;
     opacity: 0.5;
 }
 
-.guppy_buttons img:hover{
+.guppy_buttons img:hover {
     opacity: 1;
 }
 
 @keyframes blink-animation {
-  to { visibility: hidden; }
+    to {
+        visibility: hidden;
+    }
 }
 
 @-webkit-keyframes blink-animation {
-  to { visibility: hidden; }
+    to {
+        visibility: hidden;
+    }
 }
-
