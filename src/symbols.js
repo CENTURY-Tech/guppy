@@ -69,8 +69,6 @@ Symbols.validate = function () {
         if (!Symbols.symbols[sym].output.latex) throw "Symbol " + sym + " missing output.latex (needed for display)";
         if (!Symbols.symbols[sym].attrs.name) throw "Symbol " + sym + " missing attrs.name (needed for text output)";
         if (!Symbols.symbols[sym].attrs.group) throw "Symbol " + sym + " missing attrs.group (needed for mobile)";
-        //for(var i = 0; i < sym.length; i++)
-        //    if(sym.substring(0,i) in Symbols.symbols) throw "WARNING: Symbols are not prefix free: '" + sym.substring(0,i) + "' and '" + sym + "' are both symbols";
     }
 }
 
@@ -149,7 +147,6 @@ Symbols.symbol_to_node = function (s, content, base) {
         if ("type" in s.ast) f.setAttribute("ast_type", s.ast["type"])
         if ("value" in s.ast) f.setAttribute("ast_value", s.ast["value"])
     }
-    //if(s['char']) f.setAttribute("c","yes");
 
     var first_ref = -1,
         arglist = [];

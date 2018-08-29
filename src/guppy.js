@@ -67,7 +67,6 @@ var Guppy = function (id, config) {
     }
 
     this.editor_active = true;
-    //this.empty_content = settings['empty_content'] || "\\red{[?]}"
     this.editor = guppy_div;
     this.blacklist = [];
     this.autoreplace = true;
@@ -283,11 +282,6 @@ Guppy.init = function (config) {
 
             // Set backend symbols
             Guppy.instances[i].engine.symbols = JSON.parse(JSON.stringify(Symbols.symbols));
-
-            // Set backend settings
-            // for(var s in Settings.config.settings){
-            //     Guppy.instances[i].engine.settings[s] = JSON.parse(JSON.stringify(Settings.config.settings[s]));
-            // }
 
             // Set backend events
             for (var e in Settings.config.events) {
@@ -575,6 +569,7 @@ Guppy.prototype.select_to = function (x, y, mouse) {
 
 
 window.addEventListener("mousedown", Guppy.mouse_down, true);
+window.addEventListener("touchstart", Guppy.mouse_down, true);
 window.addEventListener("mouseup", Guppy.mouse_up, true);
 window.addEventListener("mousemove", Guppy.mouse_move, false);
 
