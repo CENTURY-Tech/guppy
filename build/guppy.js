@@ -26,142 +26,190 @@ arguments)}}(b))};c.init();r.Mousetrap=c;"undefined"!==typeof module&&module.exp
 },{}],3:[function(require,module,exports){
 var AST = {};
 
-AST.to_eqlist = function(ast){
-    var comparators = ["=","!=","<=",">=","<",">"];
-    if(ast[1].length == 0 || comparators.indexOf(ast[1][0][0]) < 0) return [ast];
-    return AST.to_eqlist(ast[1][0]).concat([[ast[0],[ast[1][0][1][1],ast[1][1]]]]);
+AST.to_eqlist = function (ast) {
+    var comparators = ["=", "!=", "<=", ">=", "<", ">"];
+    if (ast[1].length == 0 || comparators.indexOf(ast[1][0][0]) < 0) return [ast];
+    return AST.to_eqlist(ast[1][0]).concat([
+        [ast[0],
+            [ast[1][0][1][1], ast[1][1]]
+        ]
+    ]);
 }
 
-AST.to_text = function(ast){
+AST.to_text = function (ast) {
     var functions = {};
-    functions["bracket"] = function(args){return "("+args[0]+")";};
-    functions["="] = function(args){return args[0]+" = "+args[1];};
-    functions["!="] = function(args){return args[0]+" != "+args[1];};
-    functions["<="] = function(args){return args[0]+" <= "+args[1];};
-    functions[">="] = function(args){return args[0]+" >= "+args[1];};
-    functions["<"] = function(args){return args[0]+" < "+args[1];};
-    functions[">"] = function(args){return args[0]+" > "+args[1];};
-    functions["*"] = function(args){return "("+args[0]+" * "+args[1]+")";};
-    functions["+"] = function(args){return "("+args[0]+" + "+args[1]+")";};
-    functions["/"] = function(args){return "("+args[0]+" / "+args[1]+")";};
-    functions["fraction"] = function(args){return "("+args[0]+" / "+args[1]+")";};
-    functions["-"] = function(args){return args.length == 1 ? "-"+args[0] : "("+args[0]+" - "+args[1]+")";};
-    functions["val"] = function(args){return args[0]+"";};
-    functions["var"] = function(args){return args[0];};
-    functions["subscript"] = function(args){return "("+args[0]+"_"+args[1]+")";};
-    functions["exponential"] = function(args){return "("+args[0]+"^"+args[1]+")";};
-    functions["factorial"] = function(args){return "("+args[0]+")!";};
-    functions["_default"] = function(name, args){return name + "(" + args.join(",") + ")";};
+    functions["bracket"] = function (args) {
+        return "(" + args[0] + ")";
+    };
+    functions["="] = function (args) {
+        return args[0] + " = " + args[1];
+    };
+    functions["!="] = function (args) {
+        return args[0] + " != " + args[1];
+    };
+    functions["<="] = function (args) {
+        return args[0] + " <= " + args[1];
+    };
+    functions[">="] = function (args) {
+        return args[0] + " >= " + args[1];
+    };
+    functions["<"] = function (args) {
+        return args[0] + " < " + args[1];
+    };
+    functions[">"] = function (args) {
+        return args[0] + " > " + args[1];
+    };
+    functions["*"] = function (args) {
+        return "(" + args[0] + " * " + args[1] + ")";
+    };
+    functions["+"] = function (args) {
+        return "(" + args[0] + " + " + args[1] + ")";
+    };
+    functions["/"] = function (args) {
+        return "(" + args[0] + " / " + args[1] + ")";
+    };
+    functions["fraction"] = function (args) {
+        return "(" + args[0] + " / " + args[1] + ")";
+    };
+    functions["-"] = function (args) {
+        return args.length == 1 ? "-" + args[0] : "(" + args[0] + " - " + args[1] + ")";
+    };
+    functions["val"] = function (args) {
+        return args[0] + "";
+    };
+    functions["var"] = function (args) {
+        return args[0];
+    };
+    functions["subscript"] = function (args) {
+        return "(" + args[0] + "_" + args[1] + ")";
+    };
+    functions["exponential"] = function (args) {
+        return "(" + args[0] + "^" + args[1] + ")";
+    };
+    functions["factorial"] = function (args) {
+        return "(" + args[0] + ")!";
+    };
+    functions["_default"] = function (name, args) {
+        return name + "(" + args.join(",") + ")";
+    };
     return AST.eval(ast, functions);
 }
 
-AST.to_xml = function(ast, symbols, symbol_to_node){
-    var prepend_str = function(doc, str){
+AST.to_xml = function (ast, symbols, symbol_to_node) {
+    var prepend_str = function (doc, str) {
         doc.documentElement.firstChild.textContent = str + doc.documentElement.firstChild.textContent;
     }
-    var append_str = function(doc, str){
+    var append_str = function (doc, str) {
         doc.documentElement.lastChild.textContent += str;
     }
-    var tail = function(doc){
+    var tail = function (doc) {
         var n = doc.documentElement.lastChild;
         return n.firstChild.textContent.slice(-1);
     }
-    var head = function(doc){
+    var head = function (doc) {
         var n = doc.documentElement.firstChild;
-        return n.firstChild.textContent.slice(0,1);
+        return n.firstChild.textContent.slice(0, 1);
     }
-    var append_doc = function(doc, doc2){
+    var append_doc = function (doc, doc2) {
         var n = doc.documentElement.lastChild;
         var nn = doc2.documentElement.firstChild
         n.firstChild.textContent += nn.firstChild.textContent;
-        for(nn = nn.nextSibling; nn; nn = nn.nextSibling){
-            n.parentNode.insertBefore(nn.cloneNode(true),null); 
+        for (nn = nn.nextSibling; nn; nn = nn.nextSibling) {
+            n.parentNode.insertBefore(nn.cloneNode(true), null);
         }
     }
-    var ensure_text_nodes = function(base){
+    var ensure_text_nodes = function (base) {
         var l = base.getElementsByTagName("e");
-        for(var i = 0; i < l.length; i++){
-            if(!(l[i].firstChild)) l[i].appendChild(base.createTextNode(""));
+        for (var i = 0; i < l.length; i++) {
+            if (!(l[i].firstChild)) l[i].appendChild(base.createTextNode(""));
         }
     }
-    var get_symbol = function(name, symbols){
-        for(var s in symbols){
-            if(symbols[s].attrs.type == name) return symbols[s];
+    var get_symbol = function (name, symbols) {
+        for (var s in symbols) {
+            if (symbols[s].attrs.type == name) return symbols[s];
         }
     }
-    var get_content_array = function(args){
+    var get_content_array = function (args) {
         var content = {};
-        for(var i = 0; i < args.length; i++){
+        for (var i = 0; i < args.length; i++) {
             content[i] = [];
-            if(args[i].documentElement.nodeName == "l") content[i].push(args[i].documentElement);
-            else for(var nn = args[i].documentElement.firstChild; nn; nn = nn.nextSibling) content[i].push(nn);
+            if (args[i].documentElement.nodeName == "l") content[i].push(args[i].documentElement);
+            else
+                for (var nn = args[i].documentElement.firstChild; nn; nn = nn.nextSibling) content[i].push(nn);
         }
         return content;
     }
-    var binop_low = function(args, op, parent){
+    var binop_low = function (args, op, parent) {
         var d = args[0].cloneNode(true);
         append_str(d, op);
         append_doc(d, args[1].cloneNode(true));
-        if(parent && (parent[0] == "*" || (parent[0] == "-" && parent[1].length == 1)))
+        if (parent && (parent[0] == "*" || (parent[0] == "-" && parent[1].length == 1)))
             return make_sym("bracket", [d]);
         else
             return d;
     }
-    var binop_high = function(args, op){
+    var binop_high = function (args, op) {
         var d = args[0].cloneNode(true);
-        append_doc(d, make_sym(op,[]));
+        append_doc(d, make_sym(op, []));
         append_doc(d, args[1].cloneNode(true));
         return d;
     }
-    var make_sym = function(name, args){
+    var make_sym = function (name, args) {
         var sym = get_symbol(name, symbols);
-        if(!sym) throw "Unrecognised symbol: "+name;
+        if (!sym) throw "Unrecognised symbol: " + name;
         var base = (new window.DOMParser()).parseFromString("<c><e></e><e></e></c>", "text/xml");
         ensure_text_nodes(base);
         var e0 = base.documentElement.firstChild;
         var content = get_content_array(args);
         var f = symbol_to_node(sym, content, base)['f'];
-        e0.parentNode.insertBefore(f,e0.nextSibling);
+        e0.parentNode.insertBefore(f, e0.nextSibling);
         ensure_text_nodes(base);
         return base;
     }
     var functions = {};
 
-    var ops = ["<",">","=","<=",">=","!="];
-    for(var i = 0; i < ops.length; i++){
-        functions[ops[i]] = function(o){ return function(args){ return binop_high(args, o); }}(ops[i]);
+    var ops = ["<", ">", "=", "<=", ">=", "!="];
+    for (var i = 0; i < ops.length; i++) {
+        functions[ops[i]] = function (o) {
+            return function (args) {
+                return binop_high(args, o);
+            }
+        }(ops[i]);
     }
-    functions["*"] = function(args){
+    functions["*"] = function (args) {
         var d = args[0].cloneNode(true);
-	if(/[\d.]/.test(tail(args[0])) && /[\d.]/.test(head(args[1]))) append_doc(d, make_sym("*",[]));
+        if (/[\d.]/.test(tail(args[0])) && /[\d.]/.test(head(args[1]))) append_doc(d, make_sym("*", []));
         append_doc(d, args[1].cloneNode(true));
         return d;
     };
-    functions["/"] = function(args){
-        return make_sym("fraction",args);
+    functions["/"] = function (args) {
+        return make_sym("fraction", args);
     };
-    functions["+"] = function(args, parent){ return binop_low(args, "+", parent); };
-    functions["-"] = function(args, parent) {
-        if(args.length == 1) {
+    functions["+"] = function (args, parent) {
+        return binop_low(args, "+", parent);
+    };
+    functions["-"] = function (args, parent) {
+        if (args.length == 1) {
             var d = args[0].cloneNode(true);
             prepend_str(d, "-");
             return d;
-        }
-        else {
+        } else {
             return binop_low(args, "-", parent);
         }
     }
-    functions["val"] = function(args){ return (new window.DOMParser()).parseFromString("<c><e>" + args[0] + "</e></c>", "text/xml");};
-    functions["var"] = function(args){
-        if(args[0].length == 1) return (new window.DOMParser()).parseFromString("<c><e>" + args[0] + "</e></c>", "text/xml");
+    functions["val"] = function (args) {
+        return (new window.DOMParser()).parseFromString("<c><e>" + args[0] + "</e></c>", "text/xml");
+    };
+    functions["var"] = function (args) {
+        if (args[0].length == 1) return (new window.DOMParser()).parseFromString("<c><e>" + args[0] + "</e></c>", "text/xml");
         else return make_sym(args[0], {});
     };
-    functions["list"] = function(args){
+    functions["list"] = function (args) {
         var base = (new window.DOMParser()).parseFromString("<l></l>", "text/xml");
-        for(var i = 0; i < args.length; i++){
+        for (var i = 0; i < args.length; i++) {
             base.documentElement.appendChild(args[i].documentElement.cloneNode(true));
         }
-        base.documentElement.setAttribute("s",String(args.length))
+        base.documentElement.setAttribute("s", String(args.length))
         return base;
     };
     // var comparators = {"<":"less",">":"greater","=":"eq","!=":"neq",">=":"geq","<=":"leq"};
@@ -170,79 +218,143 @@ AST.to_xml = function(ast, symbols, symbol_to_node){
     //         return make_sym(comparators[c], args);
     //     }
     // }
-    functions["_default"] = function(name, args){
+    functions["_default"] = function (name, args) {
         return make_sym(name, args);
     }
     var ans = AST.eval(ast, functions);
     var new_base = (new window.DOMParser()).parseFromString("<m></m>", "text/xml");
-    for(var nn = ans.documentElement.firstChild; nn; nn = nn.nextSibling){
-        new_base.documentElement.insertBefore(nn.cloneNode(true),null);
+    for (var nn = ans.documentElement.firstChild; nn; nn = nn.nextSibling) {
+        new_base.documentElement.insertBefore(nn.cloneNode(true), null);
     }
     return new_base;
 
 }
 
-AST.get_nodes = function(ast, name){
-    if(ast.length < 2) return [];
+AST.get_nodes = function (ast, name) {
+    if (ast.length < 2) return [];
     var ans = [];
-    if(ast[0] == name) ans.push(ast[1]);
-    if(ast[0] == "var" || ast[0] == "val") return ans;
-    for(var i = 0; i < ast[1].length; i++) ans = ans.concat(AST.get_nodes(ast[1][i], name));
+    if (ast[0] == name) ans.push(ast[1]);
+    if (ast[0] == "var" || ast[0] == "val") return ans;
+    for (var i = 0; i < ast[1].length; i++) ans = ans.concat(AST.get_nodes(ast[1][i], name));
     return ans;
 }
 
-AST.get_vars = function(ast){
+AST.get_vars = function (ast) {
     var vars = {};
     var ans = [];
     var l = AST.get_nodes(ast, "var");
-    for(var i = 0; i < l.length; i++) vars[l[i][0]] = true;
-    for(var x in vars) ans.push(x);
+    for (var i = 0; i < l.length; i++) vars[l[i][0]] = true;
+    for (var x in vars) ans.push(x);
     return ans;
 }
 
-AST.to_function = function(ast, functions){
+AST.to_function = function (ast, functions) {
     functions = functions || {}
     var defaults = {}
-    defaults["*"] = function(args){return function(vars){return args[0](vars)*args[1](vars)};};
-    defaults["+"] = function(args){return function(vars){return args[0](vars)+args[1](vars)};};
-    defaults["fraction"] = function(args){return function(vars){return args[0](vars)/args[1](vars)};};
-    defaults["/"] = function(args){return function(vars){return args[0](vars)/args[1](vars)};};
-    defaults["-"] = function(args){return args.length == 1 ? function(vars){return -args[0](vars)} : function(vars){return args[0](vars)-args[1](vars)};};
-    defaults["val"] = function(args){return function(){ return args[0]; };};
-    defaults["var"] = function(args){return function(vars){ if(args[0] == "pi") return Math.PI; if(args[0] == "e") return Math.E; return vars[args[0]]; };};
-    defaults["exponential"] = function(args){return function(vars){return Math.pow(args[0](vars),args[1](vars))};};
-    defaults["squareroot"] = function(args){return function(vars){return Math.sqrt(args[0](vars))};};
-    defaults["absolutevalue"] = function(args){return function(vars){return Math.abs(args[0](vars))};};
-    defaults["sin"] = function(args){return function(vars){return Math.sin(args[0](vars))};};
-    defaults["cos"] = function(args){return function(vars){return Math.cos(args[0](vars))};};
-    defaults["tan"] = function(args){return function(vars){return Math.tan(args[0](vars))};};
-    defaults["log"] = function(args){return function(vars){return Math.log(args[0](vars))};};
-    for(var n in defaults) if(!functions[n]) functions[n] = defaults[n];
-    return {"function":AST.eval(ast, functions),"vars":AST.get_vars(ast)};
+    defaults["*"] = function (args) {
+        return function (vars) {
+            return args[0](vars) * args[1](vars)
+        };
+    };
+    defaults["+"] = function (args) {
+        return function (vars) {
+            return args[0](vars) + args[1](vars)
+        };
+    };
+    defaults["fraction"] = function (args) {
+        return function (vars) {
+            return args[0](vars) / args[1](vars)
+        };
+    };
+    defaults["/"] = function (args) {
+        return function (vars) {
+            return args[0](vars) / args[1](vars)
+        };
+    };
+    defaults["-"] = function (args) {
+        return args.length == 1 ? function (vars) {
+            return -args[0](vars)
+        } : function (vars) {
+            return args[0](vars) - args[1](vars)
+        };
+    };
+    defaults["val"] = function (args) {
+        return function () {
+            return args[0];
+        };
+    };
+    defaults["var"] = function (args) {
+        return function (vars) {
+            if (args[0] == "pi") return Math.PI;
+            if (args[0] == "e") return Math.E;
+            return vars[args[0]];
+        };
+    };
+    defaults["exponential"] = function (args) {
+        return function (vars) {
+            return Math.pow(args[0](vars), args[1](vars))
+        };
+    };
+    defaults["squareroot"] = function (args) {
+        return function (vars) {
+            return Math.sqrt(args[0](vars))
+        };
+    };
+    defaults["absolutevalue"] = function (args) {
+        return function (vars) {
+            return Math.abs(args[0](vars))
+        };
+    };
+    defaults["sin"] = function (args) {
+        return function (vars) {
+            return Math.sin(args[0](vars))
+        };
+    };
+    defaults["cos"] = function (args) {
+        return function (vars) {
+            return Math.cos(args[0](vars))
+        };
+    };
+    defaults["tan"] = function (args) {
+        return function (vars) {
+            return Math.tan(args[0](vars))
+        };
+    };
+    defaults["log"] = function (args) {
+        return function (vars) {
+            return Math.log(args[0](vars))
+        };
+    };
+    for (var n in defaults)
+        if (!functions[n]) functions[n] = defaults[n];
+    return {
+        "function": AST.eval(ast, functions),
+        "vars": AST.get_vars(ast)
+    };
 }
 
-AST.eval = function(ast, functions, parent){
+AST.eval = function (ast, functions, parent) {
     ans = null;
-    if(!functions["_default"]) functions["_default"] = function(name, args){ throw Error("Function not implemented: " + name + "(" + args + ")");}
-    
+    if (!functions["_default"]) functions["_default"] = function (name, args) {
+        throw Error("Function not implemented: " + name + "(" + args + ")");
+    }
+
     var args = []
-    for(var i = 0; i < ast[1].length; i++){
-        if(Object.prototype.toString.call(ast[1][i]) === '[object Array]'){
+    for (var i = 0; i < ast[1].length; i++) {
+        if (Object.prototype.toString.call(ast[1][i]) === '[object Array]') {
             args.push(AST.eval(ast[1][i], functions, ast));
-        }
-        else{
+        } else {
             args.push(ast[1][i]);
         }
     }
     var ans = null;
-    if(functions[ast[0]]) ans = functions[ast[0]](args, parent);
-    else if(functions["_default"]) ans = functions["_default"](ast[0], args, parent);
-    
+    if (functions[ast[0]]) ans = functions[ast[0]](args, parent);
+    else if (functions["_default"]) ans = functions["_default"](ast[0], args, parent);
+
     return ans
 }
 
 module.exports = AST;
-
 },{}],4:[function(require,module,exports){
 var katex = require('../lib/katex/katex-modified.min.js');
 var AST = require('./ast.js');
@@ -259,39 +371,39 @@ var Version = require('./version.js');
    @param {string} [doc=<m><e></e></m>] - An XML string representing the document
    @constructor
  */
-var Doc = function(doc, type){
+var Doc = function (doc, type) {
     type = type || "xml";
-    if(type == "xml") this.set_content(doc || "<m><e></e></m>");
-    else if(type == "latex") this.import_latex(doc);
-    else if(type == "text") this.import_text(doc);
-    else if(type == "ast") this.import_ast(doc);
-    if(this.root().hasAttribute("v") && this.root().getAttribute("v") != Version.DOC_VERSION)
-    throw Version.DOC_ERROR;
+    if (type == "xml") this.set_content(doc || "<m><e></e></m>");
+    else if (type == "latex") this.import_latex(doc);
+    else if (type == "text") this.import_text(doc);
+    else if (type == "ast") this.import_ast(doc);
+    if (this.root().hasAttribute("v") && this.root().getAttribute("v") != Version.DOC_VERSION)
+        throw Version.DOC_ERROR;
     else
-    this.root().setAttribute("v",Version.DOC_VERSION);
+        this.root().setAttribute("v", Version.DOC_VERSION);
 }
 
-Doc.prototype.is_small = function(nn){
+Doc.prototype.is_small = function (nn) {
     var n = nn.parentNode;
-    while(n != null && n.nodeName != 'm'){
-        if(n.getAttribute("small") == "yes") return true;
+    while (n != null && n.nodeName != 'm') {
+        if (n.getAttribute("small") == "yes") return true;
         n = n.parentNode
-        while(n != null && n.nodeName != 'c') n = n.parentNode;
+        while (n != null && n.nodeName != 'c') n = n.parentNode;
     }
     return false;
 }
 
-Doc.prototype.ensure_text_nodes = function(){
+Doc.prototype.ensure_text_nodes = function () {
     var l = this.base.getElementsByTagName("e");
-    for(var i = 0; i < l.length; i++){
-        if(!(l[i].firstChild)) l[i].appendChild(this.base.createTextNode(""));
+    for (var i = 0; i < l.length; i++) {
+        if (!(l[i].firstChild)) l[i].appendChild(this.base.createTextNode(""));
     }
 }
 
-Doc.prototype.is_blank = function(){
-    if(this.base.getElementsByTagName("f").length > 0) return false;
+Doc.prototype.is_blank = function () {
+    if (this.base.getElementsByTagName("f").length > 0) return false;
     var l = this.base.getElementsByTagName("e");
-    if(l.length == 1 && (!(l[0].firstChild) || l[0].firstChild.textContent == "")) return true;
+    if (l.length == 1 && (!(l[0].firstChild) || l[0].firstChild.textContent == "")) return true;
     return false;
 }
 
@@ -301,7 +413,7 @@ Doc.prototype.is_blank = function(){
     @memberof Doc
     @returns {Element}
 */
-Doc.prototype.root = function(){
+Doc.prototype.root = function () {
     return this.base.documentElement;
 }
 
@@ -311,13 +423,13 @@ Doc.prototype.root = function(){
     @param {string} t - The rendering method to use ("latex", "text", "ast" (for syntax tree), or "xml" (for internal XML representation))
     @returns {string}
 */
-Doc.prototype.get_content = function(t,r){
-    if(t == "xml") return (new XMLSerializer()).serializeToString(this.base);
-    else if(t == "ast") return JSON.stringify(this.syntax_tree());
-    else if(t == "text") return AST.to_text(this.syntax_tree());
-    else if(t == "function") return AST.to_function(this.syntax_tree(), r);
-    else if(t == "eqns") return JSON.stringify(AST.to_eqlist(this.syntax_tree()));
-    else return this.manual_render(t,this.root(),r);
+Doc.prototype.get_content = function (t, r) {
+    if (t == "xml") return (new XMLSerializer()).serializeToString(this.base);
+    else if (t == "ast") return JSON.stringify(this.syntax_tree());
+    else if (t == "text") return AST.to_text(this.syntax_tree());
+    else if (t == "function") return AST.to_function(this.syntax_tree(), r);
+    else if (t == "eqns") return JSON.stringify(AST.to_eqlist(this.syntax_tree()));
+    else return this.manual_render(t, this.root(), r);
 }
 
 /**
@@ -331,21 +443,21 @@ Doc.prototype.get_content = function(t,r){
     currently being evaluated.
     @returns {Object}
 */
-Doc.prototype.evaluate = function(evaluators){
+Doc.prototype.evaluate = function (evaluators) {
     return AST.eval(this.syntax_tree(), evaluators);
 }
 
-Doc.prototype.import_text = function(text, syms, s2n){
+Doc.prototype.import_text = function (text, syms, s2n) {
     var ast = Parsers.TextParser.tokenise_and_parse(text);
     this.import_ast(ast, syms, s2n);
 }
 
-Doc.prototype.import_latex = function(text, syms, s2n){
+Doc.prototype.import_latex = function (text, syms, s2n) {
     var ast = Parsers.LaTeXParser.tokenise_and_parse(text);
     this.import_ast(ast, syms, s2n);
 }
 
-Doc.prototype.import_ast = function(ast, syms, s2n){
+Doc.prototype.import_ast = function (ast, syms, s2n) {
     syms = syms || Symbols.symbols;
     s2n = s2n || Symbols.symbol_to_node;
     var doc = AST.to_xml(ast, syms, s2n);
@@ -353,41 +465,40 @@ Doc.prototype.import_ast = function(ast, syms, s2n){
     this.ensure_text_nodes();
 }
 
-Doc.prototype.syntax_tree = function(n){
+Doc.prototype.syntax_tree = function (n) {
     n = n || this.root()
-    if(n.nodeName == "f"){
-        var ans = {"args":[], "kwargs":{}};
+    if (n.nodeName == "f") {
+        var ans = {
+            "args": [],
+            "kwargs": {}
+        };
         ans['value'] = n.getAttribute("type");
         ans['type'] = "function";
-        if(n.hasAttribute("ast_value")) ans['value'] = n.getAttribute("ast_value");
-        if(n.hasAttribute("ast_type")) ans['type'] = n.getAttribute("ast_type");
-        else if(Utils.is_char(n)) ans['type'] = "name";
+        if (n.hasAttribute("ast_value")) ans['value'] = n.getAttribute("ast_value");
+        if (n.hasAttribute("ast_type")) ans['type'] = n.getAttribute("ast_type");
+        else if (Utils.is_char(n)) ans['type'] = "name";
 
         var iterator = this.xpath_list("./*[name()='c' or name()='l']", n)
-        for(var nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext()){
+        for (var nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext()) {
             //if(nn.hasAttribute("name")) ans.kwargs[nn.getAttribute("name")] = this.syntax_tree(nn)
             //else ans.args.push(this.syntax_tree(nn))
             ans.args.push(this.syntax_tree(nn))
         }
-    }
-    else if(n.nodeName == "l"){
+    } else if (n.nodeName == "l") {
         ans = [];
-        for(nn = n.firstChild; nn != null; nn = nn.nextSibling){
-        ans.push(this.syntax_tree(nn));
+        for (nn = n.firstChild; nn != null; nn = nn.nextSibling) {
+            ans.push(this.syntax_tree(nn));
         }
-        ans = ["list",ans];
-    }
-    else if(n.nodeName == "c" || n.nodeName == "m"){
-        if(n.hasAttribute("mode") && n.getAttribute("mode") == "text"){
+        ans = ["list", ans];
+    } else if (n.nodeName == "c" || n.nodeName == "m") {
+        if (n.hasAttribute("mode") && n.getAttribute("mode") == "text") {
             ans = n.firstChild.firstChild.textContent;
-        }
-        else{
+        } else {
             var tokens = []
-            for(nn = n.firstChild; nn != null; nn = nn.nextSibling){
-                if(nn.nodeName == "e"){
+            for (nn = n.firstChild; nn != null; nn = nn.nextSibling) {
+                if (nn.nodeName == "e") {
                     tokens = tokens.concat(Parsers.EParser.tokenise(nn.firstChild.textContent));
-                }
-                else if(nn.nodeName == "f"){
+                } else if (nn.nodeName == "f") {
                     tokens.push(this.syntax_tree(nn));
                 }
             }
@@ -397,12 +508,12 @@ Doc.prototype.syntax_tree = function(n){
     return ans;
 }
 
-Doc.prototype.xpath_node = function(xpath, node){
+Doc.prototype.xpath_node = function (xpath, node) {
     node = node || this.root()
     return this.base.evaluate(xpath, node, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
-Doc.prototype.xpath_list = function(xpath, node){
+Doc.prototype.xpath_list = function (xpath, node) {
     node = node || this.root()
     return this.base.evaluate(xpath, node, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 }
@@ -413,15 +524,17 @@ Doc.prototype.xpath_list = function(xpath, node){
     @param {string[]} [groups] - A list of groups you want strings for
     @returns {string[]}
 */
-Doc.prototype.get_symbols = function(groups){
+Doc.prototype.get_symbols = function (groups) {
     var types = {};
     var ans = [];
     var groups_selector = "//f";
-    if(groups) groups_selector += "[" + groups.map(function(){ return ""; }).join(" or ") + "]";
+    if (groups) groups_selector += "[" + groups.map(function () {
+        return "";
+    }).join(" or ") + "]";
     var iterator = this.xpath_list(groups_selector)
-    for(var nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext())
+    for (var nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext())
         types[nn.getAttribute("type")] = true;
-    for(var t in types)
+    for (var t in types)
         ans.push(t);
     return ans;
 }
@@ -431,83 +544,81 @@ Doc.prototype.get_symbols = function(groups){
     @memberof Doc
     @param {string} xml_data - An XML string representing the content of the document
 */
-Doc.prototype.set_content = function(xml_data){
+Doc.prototype.set_content = function (xml_data) {
     this.base = (new window.DOMParser()).parseFromString(xml_data, "text/xml");
     this.ensure_text_nodes();
 }
 
-Doc.prototype.auto_bracket = function(n){
+Doc.prototype.auto_bracket = function (n) {
     var e0 = n.firstChild;
     var e1 = n.lastChild;
-    if(n.childElementCount == 3 && e0.firstChild.textContent == "" && e1.firstChild.textContent == ""){ // single f child, all e children empty
+    if (n.childElementCount == 3 && e0.firstChild.textContent == "" && e1.firstChild.textContent == "") { // single f child, all e children empty
         var f = e0.nextSibling;
-    var cs = 0;
-    var c = null;
-    // Count immediate children of f that are c nodes in cs and store the last one in c
-    for(var nn = f.firstChild; nn; nn = nn.nextSibling) if(nn.tagName == "c"){ c = nn; cs++; }
-        if(cs == 1 && c.getAttribute("is_bracket") == "yes") return false; // if the f child is a bracket, don't bracket
-        if(Utils.is_char(f) && e0.getAttribute("current") != "yes" && e0.getAttribute("temp") != "yes" && e1.getAttribute("current") != "yes" && e1.getAttribute("temp") != "yes") return false; // if the f child is a character and not current or temp cursor location, don't bracket
-    }
-    else if(n.childElementCount == 1){ // Single e child
+        var cs = 0;
+        var c = null;
+        // Count immediate children of f that are c nodes in cs and store the last one in c
+        for (var nn = f.firstChild; nn; nn = nn.nextSibling)
+            if (nn.tagName == "c") {
+                c = nn;
+                cs++;
+            }
+        if (cs == 1 && c.getAttribute("is_bracket") == "yes") return false; // if the f child is a bracket, don't bracket
+        if (Utils.is_char(f) && e0.getAttribute("current") != "yes" && e0.getAttribute("temp") != "yes" && e1.getAttribute("current") != "yes" && e1.getAttribute("temp") != "yes") return false; // if the f child is a character and not current or temp cursor location, don't bracket
+    } else if (n.childElementCount == 1) { // Single e child
         var s = e0.firstChild.textContent;
-        if(s.length != 1 && Number(s)+"" != s) return true; // If content is neither a single character nor a number, bracket it
-        if(e0.getAttribute("current") == "yes" || e0.getAttribute("temp") == "yes") return true; // If content has the cursor or temp cursor, bracket it
+        if (s.length != 1 && Number(s) + "" != s) return true; // If content is neither a single character nor a number, bracket it
+        if (e0.getAttribute("current") == "yes" || e0.getAttribute("temp") == "yes") return true; // If content has the cursor or temp cursor, bracket it
         return false;
     }
     return true;
 }
 
-Doc.prototype.manual_render = function(t,n,r){
+Doc.prototype.manual_render = function (t, n, r) {
     var ans = "";
     var nn = null;
     var i = null;
     var spacer = t == "latex" ? " " : "";
-    if(n.nodeName == "e"){
-        if(t == "latex" && r){
+    if (n.nodeName == "e") {
+        if (t == "latex" && r) {
             ans = n.getAttribute("render");
-        }
-        else{
+        } else {
             ans = n.firstChild.textContent;
         }
-    }
-    else if(n.nodeName == "f"){
+    } else if (n.nodeName == "f") {
         var real_type = (t == "latex" && this.is_small(n)) ? "small_latex" : t;
-        nn = this.xpath_node("./b[@p='"+real_type+"']", n) || this.xpath_node("./b[@p='"+t+"']", n);
-        if(nn) ans = this.manual_render(t,nn,r);
-    }
-    else if(n.nodeName == "b"){
+        nn = this.xpath_node("./b[@p='" + real_type + "']", n) || this.xpath_node("./b[@p='" + t + "']", n);
+        if (nn) ans = this.manual_render(t, nn, r);
+    } else if (n.nodeName == "b") {
         var cs = []
         i = 1;
         var par = n.parentNode;
-        for(nn = par.firstChild; nn != null; nn = nn.nextSibling)
-            if(nn.nodeName == "c" || nn.nodeName == "l") cs[i++] = this.manual_render(t,nn,r);
-        for(nn = n.firstChild; nn != null; nn = nn.nextSibling){
-            if(nn.nodeType == 3) ans += nn.textContent + spacer;
-            else if(nn.nodeType == 1){
-                if(nn.hasAttribute("d")){
+        for (nn = par.firstChild; nn != null; nn = nn.nextSibling)
+            if (nn.nodeName == "c" || nn.nodeName == "l") cs[i++] = this.manual_render(t, nn, r);
+        for (nn = n.firstChild; nn != null; nn = nn.nextSibling) {
+            if (nn.nodeType == 3) ans += nn.textContent + spacer;
+            else if (nn.nodeType == 1) {
+                if (nn.hasAttribute("d")) {
                     var dim = parseInt(nn.getAttribute("d"));
-                    var joiner = function(d,l){
-                        if(d > 1) for(var k = 0; k < l.length; k++) l[k] = joiner(d-1,l[k]);
-                        return l.join(nn.getAttribute('sep'+(d-1)));
+                    var joiner = function (d, l) {
+                        if (d > 1)
+                            for (var k = 0; k < l.length; k++) l[k] = joiner(d - 1, l[k]);
+                        return l.join(nn.getAttribute('sep' + (d - 1)));
                     }
-                ans += joiner(dim,cs[parseInt(nn.getAttribute("ref"))]) + spacer;
-                }
-                else ans += cs[parseInt(nn.getAttribute("ref"))] + spacer;
+                    ans += joiner(dim, cs[parseInt(nn.getAttribute("ref"))]) + spacer;
+                } else ans += cs[parseInt(nn.getAttribute("ref"))] + spacer;
             }
         }
-    }
-    else if(n.nodeName == "l"){
+    } else if (n.nodeName == "l") {
         ans = [];
         i = 0;
-        for(nn = n.firstChild; nn != null; nn = nn.nextSibling){
-            ans[i++] = this.manual_render(t,nn,r);
+        for (nn = n.firstChild; nn != null; nn = nn.nextSibling) {
+            ans[i++] = this.manual_render(t, nn, r);
         }
-    }
-    else if(n.nodeName == "c" || n.nodeName == "m"){
-        for(nn = n.firstChild; nn != null; nn = nn.nextSibling)
-            ans += this.manual_render(t,nn,r) + spacer;
-        if(t == "latex" && n.getAttribute("bracket") == "yes" && this.auto_bracket(n)) {
-            ans = "\\left("+ans+"\\right)";
+    } else if (n.nodeName == "c" || n.nodeName == "m") {
+        for (nn = n.firstChild; nn != null; nn = nn.nextSibling)
+            ans += this.manual_render(t, nn, r) + spacer;
+        if (t == "latex" && n.getAttribute("bracket") == "yes" && this.auto_bracket(n)) {
+            ans = "\\left(" + ans + "\\right)";
         }
     }
     return ans;
@@ -520,82 +631,86 @@ Doc.prototype.manual_render = function(t,n,r){
     @param {string} [root_node] - The DOM Element object within which to do the rendering
     @memberof Doc
 */
-Doc.render_all = function(t, delim, root_node){
-    var l,i,n,d,s,ans = [];
-    if(!t || t == "xml"){
+Doc.render_all = function (t, delim, root_node) {
+    var l, i, n, d, s, ans = [];
+    if (!t || t == "xml") {
         l = document.getElementsByTagName("script");
-        for(i = 0; i < l.length; i++){
-            if(l[i].getAttribute("type") == "text/guppy_xml"){
+        for (i = 0; i < l.length; i++) {
+            if (l[i].getAttribute("type") == "text/guppy_xml") {
                 n = l[i];
                 d = new Doc(n.innerHTML);
                 s = document.createElement("span");
-        var len = ans.length;
-        var new_id = "guppy-"+t+"-render-"+len;
-        while(document.getElementById(new_id)) new_id = "guppy-xml-render-"+(++len);
-                s.setAttribute("id",new_id);
-                s.setAttribute("class","guppy-render");
+                var len = ans.length;
+                var new_id = "guppy-" + t + "-render-" + len;
+                while (document.getElementById(new_id)) new_id = "guppy-xml-render-" + (++len);
+                s.setAttribute("id", new_id);
+                s.setAttribute("class", "guppy-render");
                 katex.render(d.get_content("latex"), s);
                 n.parentNode.insertBefore(s, n);
                 n.parentNode.removeChild(n);
-                ans.push({"container":s, "doc":d})
+                ans.push({
+                    "container": s,
+                    "doc": d
+                })
             }
         }
-    }
-    else {
-        var subs = function(node) {
-            if(!node) return;
+    } else {
+        var subs = function (node) {
+            if (!node) return;
             var excludeElements = ['script', 'style', 'iframe', 'canvas', 'pre', 'code'];
             do {
                 switch (node.nodeType) {
-                case 1:
-                    // Don't process KaTeX elements, Guppy instances, Javascript, or CSS
-                    if (excludeElements.indexOf(node.tagName.toLowerCase()) > -1 || (" "+node.getAttribute("class")+" ").indexOf(" katex ") > -1 || (""+node.getAttribute("class")).indexOf("guppy") > -1) {
-                        continue;
-                    }
-                    subs(node.firstChild);
-                    break;
-                case 3:
-                    var text_node = node;
-                    var offset = text_node.textContent.indexOf(delim);
-                    while(offset > -1){
-                        var next = text_node.textContent.substring(offset+delim.length).indexOf(delim);
-                        if(next == -1) break;
-                        var before = text_node.textContent.substring(0,offset);
-                        var content = text_node.textContent.substring(offset+delim.length,offset+delim.length+next);
-                        var after = text_node.textContent.substring(offset+delim.length+next+delim.length);
+                    case 1:
+                        // Don't process KaTeX elements, Guppy instances, Javascript, or CSS
+                        if (excludeElements.indexOf(node.tagName.toLowerCase()) > -1 || (" " + node.getAttribute("class") + " ").indexOf(" katex ") > -1 || ("" + node.getAttribute("class")).indexOf("guppy") > -1) {
+                            continue;
+                        }
+                        subs(node.firstChild);
+                        break;
+                    case 3:
+                        var text_node = node;
+                        var offset = text_node.textContent.indexOf(delim);
+                        while (offset > -1) {
+                            var next = text_node.textContent.substring(offset + delim.length).indexOf(delim);
+                            if (next == -1) break;
+                            var before = text_node.textContent.substring(0, offset);
+                            var content = text_node.textContent.substring(offset + delim.length, offset + delim.length + next);
+                            var after = text_node.textContent.substring(offset + delim.length + next + delim.length);
 
-                        // Make the span to render the doc in
-                        var s = document.createElement("span");
-            var l = ans.length;
-            var new_id = "guppy-"+t+"-render-"+l;
-            while(document.getElementById(new_id)) new_id = "guppy-"+t+"-render-"+(++l);
-                        s.setAttribute("id",new_id);
-            s.setAttribute("class","guppy-render");
+                            // Make the span to render the doc in
+                            var s = document.createElement("span");
+                            var l = ans.length;
+                            var new_id = "guppy-" + t + "-render-" + l;
+                            while (document.getElementById(new_id)) new_id = "guppy-" + t + "-render-" + (++l);
+                            s.setAttribute("id", new_id);
+                            s.setAttribute("class", "guppy-render");
 
-            try {
-                            // Create the document
-                            d = new Doc(content,t);
+                            try {
+                                // Create the document
+                                d = new Doc(content, t);
 
-                            // Render the doc
-                            katex.render(d.get_content("latex"), s);
-            }
-            catch (e) {
-                s.innerHTML = "ERROR: "+e.message;
-            }
-                        var new_node = document.createTextNode(after)
-                        text_node.parentNode.insertBefore(document.createTextNode(before), text_node);
-                        text_node.parentNode.insertBefore(s, text_node);
-                        text_node.parentNode.insertBefore(new_node, text_node);
-                        text_node.parentNode.removeChild(text_node);
-                        text_node = new_node;
-            node = new_node;
-                        ans.push({"id":new_id, "doc":d});
+                                // Render the doc
+                                katex.render(d.get_content("latex"), s);
+                            } catch (e) {
+                                s.innerHTML = "ERROR: " + e.message;
+                            }
+                            var new_node = document.createTextNode(after)
+                            text_node.parentNode.insertBefore(document.createTextNode(before), text_node);
+                            text_node.parentNode.insertBefore(s, text_node);
+                            text_node.parentNode.insertBefore(new_node, text_node);
+                            text_node.parentNode.removeChild(text_node);
+                            text_node = new_node;
+                            node = new_node;
+                            ans.push({
+                                "id": new_id,
+                                "doc": d
+                            });
 
-                        offset = text_node.textContent.indexOf(delim);
-                    }
-                    break;
-        default:
-                    break;
+                            offset = text_node.textContent.indexOf(delim);
+                        }
+                        break;
+                    default:
+                        break;
                 }
             } while ((node = node.nextSibling));
 
@@ -612,63 +727,71 @@ Doc.render_all = function(t, delim, root_node){
     @param {string} target_id - The ID of the HTML element to render into
     @memberof Doc
 */
-Doc.render = function(doc, target_id){
+Doc.render = function (doc, target_id) {
     var d = new Doc(doc);
     var target = document.getElementById(target_id);
     katex.render(d.get_content("latex"), target);
-    return {"container":target, "doc":d};
+    return {
+        "container": target,
+        "doc": d
+    };
 }
 
 
 module.exports = Doc;
-
 },{"../lib/katex/katex-modified.min.js":1,"./ast.js":3,"./parser.js":7,"./symbols.js":9,"./utils.js":10,"./version.js":11}],5:[function(require,module,exports){
 var Utils = require('./utils.js');
 var Doc = require('./doc.js');
 var Symbols = require('./symbols.js');
 var Settings = require('./settings.js');
 
-String.prototype.splice = function(idx, s){ return (this.slice(0,idx) + s + this.slice(idx)); };
-String.prototype.splicen = function(idx, s, n){ return (this.slice(0,idx) + s + this.slice(idx+n));};
-String.prototype.search_at = function(idx, s){ return (this.substring(idx-s.length,idx) == s); };
+String.prototype.splice = function (idx, s) {
+    return (this.slice(0, idx) + s + this.slice(idx));
+};
+String.prototype.splicen = function (idx, s, n) {
+    return (this.slice(0, idx) + s + this.slice(idx + n));
+};
+String.prototype.search_at = function (idx, s) {
+    return (this.substring(idx - s.length, idx) == s);
+};
 
 /**
  * @class
  * @classdesc The engine for scripting the editor.  To access the
  * engine for scripting a particular Guppy instance, say called
- * `"guppy1"`, do `Guppy("guppy1").engine`.  
+ * `"guppy1"`, do `Guppy("guppy1").engine`.
  *
  * At that point, you can, for example, move that editor's cursor
  * one spot to the left with `Guppy("guppy1").engine.left()`.
-*/
-var Engine = function(config){
+ */
+var Engine = function (config) {
     config = config || {};
     var events = config['events'] || {};
     var settings = config['settings'] || {};
     this.parent = config['parent'];
     this.id = this.parent.editor.id;
-    
+
     this.ready = false;
     this.events = {};
     this.settings = {};
-    
+
     var evts = ["ready", "change", "left_end", "right_end", "done", "completion", "debug", "error", "focus"];
-    
-    for(var i = 0; i < evts.length; i++){
+
+    for (var i = 0; i < evts.length; i++) {
         var e = evts[i];
-        if(e in events) this.events[e] = e in events ? events[e] : null;
+        if (e in events) this.events[e] = e in events ? events[e] : null;
     }
 
     var opts = ["blank_caret", "empty_content", "blacklist", "autoreplace", "cliptype"];
-    
-    for(var j = 0; j < opts.length; j++){
+
+    for (var j = 0; j < opts.length; j++) {
         var p = opts[j];
-        if(p in settings) this.settings[p] = settings[p];
+        if (p in settings) this.settings[p] = settings[p];
     }
 
     this.symbols = {};
     this.doc = new Doc(settings["xml_content"]);
-    
+
     this.current = this.doc.root().firstChild;
     this.caret = 0;
     this.space_caret = 0;
@@ -678,7 +801,7 @@ var Engine = function(config){
     this.undo_now = -1;
     this.sel_status = Engine.SEL_NONE;
     this.checkpoint();
-    if(Engine.ready && !this.ready){
+    if (Engine.ready && !this.ready) {
         this.ready = true;
         this.symbols = JSON.parse(JSON.stringify(Symbols.symbols));
         this.fire_event("ready");
@@ -691,38 +814,38 @@ Engine.SEL_CURSOR_AT_START = 1;
 Engine.SEL_CURSOR_AT_END = 2;
 Engine.clipboard = null;
 
-Engine.prototype.setting = function(name){
+Engine.prototype.setting = function (name) {
     return name in this.settings ? this.settings[name] : Settings.config.settings[name];
 }
 
-Engine.prototype.event = function(name){
+Engine.prototype.event = function (name) {
     return name in this.events ? this.events[name] : Settings.config.events[name];
 }
 
-/** 
+/**
     Get the content of the editor
     @memberof Engine
     @param {string} t - The type of content to render ("latex", "text", or "xml").
 */
-Engine.prototype.get_content = function(t,r){
-    return this.doc.get_content(t,r);
+Engine.prototype.get_content = function (t, r) {
+    return this.doc.get_content(t, r);
 }
 
-/** 
+/**
     Set the XML content of the editor
     @memberof Engine
     @param {string} xml_data - An XML string of the content to place in the editor
 */
-Engine.prototype.set_content = function(xml_data){
+Engine.prototype.set_content = function (xml_data) {
     this.set_doc(new Doc(xml_data));
 }
 
-/** 
+/**
     Set the document of the editor
     @memberof Engine
     @param {Doc} doc - The Doc that will be the editor's source
 */
-Engine.prototype.set_doc = function(doc){
+Engine.prototype.set_doc = function (doc) {
     this.doc = doc;
     this.current = this.doc.root().firstChild;
     this.caret = 0;
@@ -734,39 +857,39 @@ Engine.prototype.set_doc = function(doc){
     this.checkpoint();
 }
 
-Engine.prototype.import_text = function(text){
+Engine.prototype.import_text = function (text) {
     this.doc.import_text(text, this.symbols);
     this.set_doc(this.doc);
 }
 
-Engine.prototype.import_latex = function(text){
+Engine.prototype.import_latex = function (text) {
     this.doc.import_latex(text, this.symbols);
     this.set_doc(this.doc);
 }
 
-Engine.prototype.import_ast = function(ast){
+Engine.prototype.import_ast = function (ast) {
     this.doc.import_ast(ast, this.symbols);
     this.set_doc(this.doc);
 }
 
-Engine.prototype.fire_event = function(event, args){
+Engine.prototype.fire_event = function (event, args) {
     args = args || {};
     args.target = this.parent || this;
     args.type = event;
     var ev = this.event(event);
-    if(ev && this.ready && Engine.ready) ev(args);
+    if (ev && this.ready && Engine.ready) ev(args);
 }
 
-/** 
+/**
     Remove a symbol from this instance of the editor.
     @memberof Engine
     @param {string} name - The name of the symbol to remove.
 */
-Engine.prototype.remove_symbol = function(name){
-    if(this.symbols[name]) delete this.symbols[name];
+Engine.prototype.remove_symbol = function (name) {
+    if (this.symbols[name]) delete this.symbols[name];
 }
 
-/** 
+/**
     Add a symbol to this instance of the editor.
     @memberof Engine
     @param {string} name - param
@@ -776,196 +899,210 @@ Engine.prototype.remove_symbol = function(name){
     documentation for Guppy.add_global_symbol.
     @param {string} [template] - The name of the template to use.
 */
-Engine.prototype.add_symbol = function(name, symbol){
+Engine.prototype.add_symbol = function (name, symbol) {
     this.symbols[name] = symbol;
 }
 
-Engine.prototype.select_to = function(loc, sel_cursor, sel_caret, mouse){
-    if(loc.current == sel_cursor && loc.caret == sel_caret){
+Engine.prototype.select_to = function (loc, sel_cursor, sel_caret, mouse) {
+    if (loc.current == sel_cursor && loc.caret == sel_caret) {
         this.current = loc.current;
         this.caret = loc.caret;
         this.sel_status = Engine.SEL_NONE;
-    }
-    else if(loc.pos == "left"){
-        this.sel_end = {"node":sel_cursor,"caret":sel_caret};
+    } else if (loc.pos == "left") {
+        this.sel_end = {
+            "node": sel_cursor,
+            "caret": sel_caret
+        };
         this.current = loc.current;
         this.caret = loc.caret;
         this.set_sel_boundary(Engine.SEL_CURSOR_AT_START, mouse);
-    }
-    else if(loc.pos == "right"){
-        this.sel_start = {"node":sel_cursor,"caret":sel_caret};
+    } else if (loc.pos == "right") {
+        this.sel_start = {
+            "node": sel_cursor,
+            "caret": sel_caret
+        };
         this.current = loc.current;
         this.caret = loc.caret;
         this.set_sel_boundary(Engine.SEL_CURSOR_AT_END, mouse);
     }
 }
 
-Engine.prototype.set_sel_start = function(){
-    this.sel_start = {"node":this.current, "caret":this.caret};
+Engine.prototype.set_sel_start = function () {
+    this.sel_start = {
+        "node": this.current,
+        "caret": this.caret
+    };
 }
 
-Engine.prototype.set_sel_end = function(){
-    this.sel_end = {"node":this.current, "caret":this.caret};
+Engine.prototype.set_sel_end = function () {
+    this.sel_end = {
+        "node": this.current,
+        "caret": this.caret
+    };
 }
 
-Engine.prototype.add_paths = function(n,path){
-    if(n.nodeName == "e"){
-        n.setAttribute("path",path);
-    }
-    else{
-        var es = 1, fs = 1, cs = 1, ls = 1;
-        for(var c = n.firstChild; c != null; c = c.nextSibling){
-            if(c.nodeName == "c"){ this.add_paths(c, path+"_c"+cs); cs++; }
-            else if(c.nodeName == "f"){ this.add_paths(c, path+"_f"+fs); fs++; }
-            else if(c.nodeName == "l"){ this.add_paths(c, path+"_l"+ls); ls++; }
-            else if(c.nodeName == "e"){ this.add_paths(c, path+"_e"+es); es++; }
+Engine.prototype.add_paths = function (n, path) {
+    if (n.nodeName == "e") {
+        n.setAttribute("path", path);
+    } else {
+        var es = 1,
+            fs = 1,
+            cs = 1,
+            ls = 1;
+        for (var c = n.firstChild; c != null; c = c.nextSibling) {
+            if (c.nodeName == "c") {
+                this.add_paths(c, path + "_c" + cs);
+                cs++;
+            } else if (c.nodeName == "f") {
+                this.add_paths(c, path + "_f" + fs);
+                fs++;
+            } else if (c.nodeName == "l") {
+                this.add_paths(c, path + "_l" + ls);
+                ls++;
+            } else if (c.nodeName == "e") {
+                this.add_paths(c, path + "_e" + es);
+                es++;
+            }
         }
     }
 }
 
-Engine.prototype.add_classes_cursors = function(n){
-    if(n.nodeName == "e"){
+Engine.prototype.add_classes_cursors = function (n) {
+    if (n.nodeName == "e") {
         var text = n.firstChild.nodeValue;
         var ans = "";
         var sel_cursor;
         var text_node = Utils.is_text(n);
-        if(this.sel_status == Engine.SEL_CURSOR_AT_START) sel_cursor = this.sel_end;
-        if(this.sel_status == Engine.SEL_CURSOR_AT_END) sel_cursor = this.sel_start;
-        if(this.sel_status != Engine.SEL_NONE){
+        if (this.sel_status == Engine.SEL_CURSOR_AT_START) sel_cursor = this.sel_end;
+        if (this.sel_status == Engine.SEL_CURSOR_AT_END) sel_cursor = this.sel_start;
+        if (this.sel_status != Engine.SEL_NONE) {
             var sel_caret_text = Utils.is_small(sel_cursor.node) ? Utils.SMALL_SEL_CARET : Utils.SEL_CARET;
-            if(!text_node && text.length == 0 && n.parentNode.childElementCount > 1){
-                sel_caret_text = "\\blue{\\xmlClass{guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0}{"+sel_caret_text+"}}";
+            if (!text_node && text.length == 0 && n.parentNode.childElementCount > 1) {
+                sel_caret_text = "\\blue{\\xmlClass{guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0}{" + sel_caret_text + "}}";
+            } else {
+                sel_caret_text = "\\blue{" + sel_caret_text + "}";
             }
-            else{
-                sel_caret_text = "\\blue{"+sel_caret_text+"}";
-            }
-            if(this.sel_status == Engine.SEL_CURSOR_AT_END) sel_caret_text = text_node ? "[" : sel_caret_text + "\\"+Utils.SEL_COLOR+"{";
-            if(this.sel_status == Engine.SEL_CURSOR_AT_START) sel_caret_text = text_node ? "]" : "}" + sel_caret_text;
+            if (this.sel_status == Engine.SEL_CURSOR_AT_END) sel_caret_text = text_node ? "[" : sel_caret_text + "\\" + Utils.SEL_COLOR + "{";
+            if (this.sel_status == Engine.SEL_CURSOR_AT_START) sel_caret_text = text_node ? "]" : "}" + sel_caret_text;
         }
         var caret_text = "";
         var temp_caret_text = "";
-        if(text.length == 0){
-            if(text_node) caret_text = "\\_";
-            else if(n.parentNode.childElementCount == 1){
-                if(this.current == n){
+        if (text.length == 0) {
+            if (text_node) caret_text = "\\_";
+            else if (n.parentNode.childElementCount == 1) {
+                if (this.current == n) {
                     var blank_caret = this.setting("blank_caret") || (Utils.is_small(this.current) ? Utils.SMALL_CARET : Utils.CARET);
-                    ans = "\\red{\\xmlClass{main_cursor guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0"+"}{"+blank_caret+"}}";
-                }
-                else if(this.temp_cursor.node == n)
-                    ans = "\\gray{\\xmlClass{guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0"+"}{[?]}}";
+                    ans = "\\red{\\xmlClass{main_cursor guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0" + "}{" + blank_caret + "}}";
+                } else if (this.temp_cursor.node == n)
+                    ans = "\\gray{\\xmlClass{guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0" + "}{[?]}}";
                 else
-                    ans = "\\blue{\\xmlClass{guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0"+"}{[?]}}";
-            }
-            else if(this.temp_cursor.node != n && this.current != n && (!(sel_cursor) || sel_cursor.node != n)){
+                    ans = "\\blue{\\xmlClass{guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0" + "}{[?]}}";
+            } else if (this.temp_cursor.node != n && this.current != n && (!(sel_cursor) || sel_cursor.node != n)) {
                 // These are the empty e elements at either end of
                 // a c or m node, such as the space before and
                 // after both the sin and x^2 in sin(x^2)
                 //
                 // Here, we add in a small element so that we can
                 // use the mouse to select these areas
-                ans = "\\phantom{\\xmlClass{guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0"+"}{\\cursor[0.1ex]{1ex}}}";
+                ans = "\\phantom{\\xmlClass{guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0" + "}{\\cursor[0.1ex]{1ex}}}";
             }
         }
-        for(var i = 0; i < text.length+1; i++){
-            if(n == this.current && i == this.caret && (text.length > 0 || n.parentNode.childElementCount > 1)){
-                if(text_node){
-                    if(this.sel_status == Engine.SEL_CURSOR_AT_START)
+        for (var i = 0; i < text.length + 1; i++) {
+            if (n == this.current && i == this.caret && (text.length > 0 || n.parentNode.childElementCount > 1)) {
+                if (text_node) {
+                    if (this.sel_status == Engine.SEL_CURSOR_AT_START)
                         caret_text = "[";
-                    else if(this.sel_status == Engine.SEL_CURSOR_AT_END)
+                    else if (this.sel_status == Engine.SEL_CURSOR_AT_END)
                         caret_text = "]";
                     else
                         caret_text = "\\_";
-                }
-                else{
+                } else {
                     caret_text = Utils.is_small(this.current) ? Utils.SMALL_CARET : Utils.CARET;
-                    if(text.length == 0)
-                        caret_text = "\\red{\\xmlClass{main_cursor guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0}{"+caret_text+"}}";
-                    else{
-                        caret_text = "\\red{\\xmlClass{main_cursor}{"+caret_text+"}}"
+                    if (text.length == 0)
+                        caret_text = "\\red{\\xmlClass{main_cursor guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0}{" + caret_text + "}}";
+                    else {
+                        caret_text = "\\red{\\xmlClass{main_cursor}{" + caret_text + "}}"
                     }
-                    if(this.sel_status == Engine.SEL_CURSOR_AT_START)
-                        caret_text = caret_text + "\\"+Utils.SEL_COLOR+"{";
-                    else if(this.sel_status == Engine.SEL_CURSOR_AT_END)
+                    if (this.sel_status == Engine.SEL_CURSOR_AT_START)
+                        caret_text = caret_text + "\\" + Utils.SEL_COLOR + "{";
+                    else if (this.sel_status == Engine.SEL_CURSOR_AT_END)
                         caret_text = "}" + caret_text;
                 }
                 ans += caret_text;
-            }
-            else if(n == this.current && i == this.caret && text_node){
+            } else if (n == this.current && i == this.caret && text_node) {
                 ans += caret_text;
-            }
-            else if(this.sel_status != Engine.SEL_NONE && sel_cursor.node == n && i == sel_cursor.caret){
+            } else if (this.sel_status != Engine.SEL_NONE && sel_cursor.node == n && i == sel_cursor.caret) {
                 ans += sel_caret_text;
-            }
-            else if(this.temp_cursor.node == n && i == this.temp_cursor.caret && (text.length > 0 || n.parentNode.childElementCount > 1)){
-                if(text_node) 
+            } else if (this.temp_cursor.node == n && i == this.temp_cursor.caret && (text.length > 0 || n.parentNode.childElementCount > 1)) {
+                if (text_node)
                     temp_caret_text = ".";
-                else{
+                else {
                     temp_caret_text = Utils.is_small(this.current) ? Utils.TEMP_SMALL_CARET : Utils.TEMP_CARET;
-                    if(text.length == 0){
-                        temp_caret_text = "\\gray{\\xmlClass{guppy_elt guppy_blank guppy_loc_"+n.getAttribute("path")+"_0}{"+temp_caret_text+"}}";
-                    }
-                    else
-                        temp_caret_text = "\\gray{"+temp_caret_text+"}";
+                    if (text.length == 0) {
+                        temp_caret_text = "\\gray{\\xmlClass{guppy_elt guppy_blank guppy_loc_" + n.getAttribute("path") + "_0}{" + temp_caret_text + "}}";
+                    } else
+                        temp_caret_text = "\\gray{" + temp_caret_text + "}";
                 }
                 ans += temp_caret_text;
             }
-            if(i < text.length) ans += "\\xmlClass{guppy_elt guppy_loc_"+n.getAttribute("path")+"_"+i+"}{"+text[i]+"}";
+            if (i < text.length) ans += "\\xmlClass{guppy_elt guppy_loc_" + n.getAttribute("path") + "_" + i + "}{" + text[i] + "}";
         }
-        if(text_node && n == this.current){
-            ans = "\\xmlClass{guppy_text_current}{{"+ans+"}}";
+        if (text_node && n == this.current) {
+            ans = "\\xmlClass{guppy_text_current}{{" + ans + "}}";
         }
         n.setAttribute("render", ans);
         n.removeAttribute("path");
-    }
-    else{
-        for(var c = n.firstChild; c != null; c = c.nextSibling){
-            if(c.nodeName == "c" || c.nodeName == "l" || c.nodeName == "f" || c.nodeName == "e"){ this.add_classes_cursors(c); }
+    } else {
+        for (var c = n.firstChild; c != null; c = c.nextSibling) {
+            if (c.nodeName == "c" || c.nodeName == "l" || c.nodeName == "f" || c.nodeName == "e") {
+                this.add_classes_cursors(c);
+            }
         }
     }
 }
 
-Engine.prototype.remove_cursors_classes = function(n){
-    if(n.nodeName == "e"){
+Engine.prototype.remove_cursors_classes = function (n) {
+    if (n.nodeName == "e") {
         n.removeAttribute("path");
         n.removeAttribute("render");
         n.removeAttribute("current");
         n.removeAttribute("temp");
-    }
-    else{
-        for(var c = n.firstChild; c != null; c = c.nextSibling){
-            if(c.nodeType == 1){ this.remove_cursors_classes(c); }
+    } else {
+        for (var c = n.firstChild; c != null; c = c.nextSibling) {
+            if (c.nodeType == 1) {
+                this.remove_cursors_classes(c);
+            }
         }
     }
 }
 
-Engine.prototype.down_from_f = function(){
+Engine.prototype.down_from_f = function () {
     var nn = this.current.firstChild;
-    while(nn != null && nn.nodeName != 'c' && nn.nodeName != 'l') nn = nn.nextSibling;
-    if(nn != null){
-        while(nn.nodeName == 'l') nn = nn.firstChild;
+    while (nn != null && nn.nodeName != 'c' && nn.nodeName != 'l') nn = nn.nextSibling;
+    if (nn != null) {
+        while (nn.nodeName == 'l') nn = nn.firstChild;
         this.current = nn.firstChild;
     }
 }
 
-Engine.prototype.down_from_f_to_blank = function(){
+Engine.prototype.down_from_f_to_blank = function () {
     var nn = this.current.firstChild;
-    while(nn != null && !(nn.nodeName == 'c' && nn.children.length == 1 && nn.firstChild.firstChild.nodeValue == "")){
+    while (nn != null && !(nn.nodeName == 'c' && nn.children.length == 1 && nn.firstChild.firstChild.nodeValue == "")) {
         nn = nn.nextSibling;
     }
-    if(nn != null){
+    if (nn != null) {
         //Sanity check:
-        
-        while(nn.nodeName == 'l') nn = nn.firstChild;
-        if(nn.nodeName != 'c' || nn.firstChild.nodeName != 'e'){
+
+        while (nn.nodeName == 'l') nn = nn.firstChild;
+        if (nn.nodeName != 'c' || nn.firstChild.nodeName != 'e') {
             this.problem('dfftb');
             return;
         }
         this.current = nn.firstChild;
-    }
-    else this.down_from_f();
+    } else this.down_from_f();
 }
 
-Engine.prototype.delete_from_f = function(to_insert){
+Engine.prototype.delete_from_f = function (to_insert) {
     var n = this.current;
     var p = n.parentNode;
     var prev = n.previousSibling;
@@ -980,75 +1117,72 @@ Engine.prototype.delete_from_f = function(to_insert){
     p.removeChild(next);
 }
 
-Engine.prototype.symbol_to_node = function(sym_name, content){
+Engine.prototype.symbol_to_node = function (sym_name, content) {
     return Symbols.symbol_to_node(this.symbols[sym_name], content, this.doc.base);
 }
 
-/** 
+/**
     Insert a symbol into the document at the current cursor position.
     @memberof Engine
     @param {string} sym_name - The name of the symbol to insert.
     Should match one of the keys in the symbols JSON object
 */
-Engine.prototype.insert_symbol = function(sym_name){
+Engine.prototype.insert_symbol = function (sym_name) {
     var s = this.symbols[sym_name];
-    if(s.attrs && this.is_blacklisted(s.attrs.type)){
+    if (s.attrs && this.is_blacklisted(s.attrs.type)) {
         return false;
     }
     var content = {};
-    var left_piece,right_piece;
+    var left_piece, right_piece;
     var cur = "input" in s ? s.input : 0;
     var to_remove = [];
     var to_replace = null;
     var replace_f = false;
     var sel;
-    
-    if(cur > 0){
+
+    if (cur > 0) {
         cur--;
-        if(this.sel_status != Engine.SEL_NONE){
+        if (this.sel_status != Engine.SEL_NONE) {
             sel = this.sel_get();
             to_remove = sel.involved;
-            left_piece = this.make_e(sel.remnant.firstChild.nodeValue.slice(0,this.sel_start.caret));
+            left_piece = this.make_e(sel.remnant.firstChild.nodeValue.slice(0, this.sel_start.caret));
             right_piece = this.make_e(sel.remnant.firstChild.nodeValue.slice(this.sel_start.caret));
             content[cur] = sel.node_list;
-        }
-        else if("input" in s){
+        } else if ("input" in s) {
             // If we're at the beginning, then the token is the previous f node
-            if(this.caret == 0 && this.current.previousSibling != null){
+            if (this.caret == 0 && this.current.previousSibling != null) {
                 content[cur] = [this.make_e(""), this.current.previousSibling, this.make_e("")];
                 to_replace = this.current.previousSibling;
                 replace_f = true;
-            }
-            else{
+            } else {
                 // look for [0-9.]+|[a-zA-Z] immediately preceeding the caret and use that as token
-                var prev = this.current.firstChild.nodeValue.substring(0,this.caret);
+                var prev = this.current.firstChild.nodeValue.substring(0, this.caret);
                 var token = prev.match(/[0-9.]+$|[a-zA-Z]$/);
-                if(token != null && token.length > 0){
+                if (token != null && token.length > 0) {
                     token = token[0];
-                    left_piece = this.make_e(this.current.firstChild.nodeValue.slice(0,this.caret-token.length));
+                    left_piece = this.make_e(this.current.firstChild.nodeValue.slice(0, this.caret - token.length));
                     right_piece = this.make_e(this.current.firstChild.nodeValue.slice(this.caret));
                     content[cur] = [this.make_e(token)];
                 }
             }
         }
     }
-    if(!replace_f && (left_piece == null || right_piece == null)){
-        if(this.sel_status != Engine.SEL_NONE){
+    if (!replace_f && (left_piece == null || right_piece == null)) {
+        if (this.sel_status != Engine.SEL_NONE) {
             sel = this.sel_get();
             to_remove = sel.involved;
-            left_piece = this.make_e(sel.remnant.firstChild.nodeValue.slice(0,this.sel_start.caret));
+            left_piece = this.make_e(sel.remnant.firstChild.nodeValue.slice(0, this.sel_start.caret));
             right_piece = this.make_e(sel.remnant.firstChild.nodeValue.slice(this.sel_start.caret));
             content = [sel.node_list];
-	}
-	else{
-            left_piece = this.make_e(this.current.firstChild.nodeValue.slice(0,this.caret));
+        } else {
+            left_piece = this.make_e(this.current.firstChild.nodeValue.slice(0, this.caret));
             right_piece = this.make_e(this.current.firstChild.nodeValue.slice(this.caret));
             to_remove = [this.current];
-	}
+        }
     }
 
     // By now:
-    // 
+    //
     // content contains whatever we want to pre-populate the 'current' field with (if any)
     //
     // right_piece contains whatever content was in an involved node
@@ -1058,34 +1192,32 @@ Engine.prototype.insert_symbol = function(sym_name){
     // Thus all we should have to do now is symbol_to_node(sym_type,
     // content) and then add the left_piece, resulting node, and
     // right_piece in that order.
-    var sym = this.symbol_to_node(sym_name,content);
+    var sym = this.symbol_to_node(sym_name, content);
     var current_parent = this.current.parentNode;
-    
+
     var f = sym.f;
 
     var next = this.current.nextSibling;
 
-    if(replace_f){
-        current_parent.replaceChild(f,to_replace);
-    }
-    else{
-        if(to_remove.length == 0) this.current.parentNode.removeChild(this.current);
-        
-        for(var i = 0; i < to_remove.length; i++){
-            if(next == to_remove[i]) next = next.nextSibling;
+    if (replace_f) {
+        current_parent.replaceChild(f, to_replace);
+    } else {
+        if (to_remove.length == 0) this.current.parentNode.removeChild(this.current);
+
+        for (var i = 0; i < to_remove.length; i++) {
+            if (next == to_remove[i]) next = next.nextSibling;
             current_parent.removeChild(to_remove[i]);
         }
         current_parent.insertBefore(left_piece, next);
         current_parent.insertBefore(f, next);
         current_parent.insertBefore(right_piece, next);
     }
-    
+
     this.caret = 0;
     this.current = f;
-    if(sym.args.length == 0 || ("input" in s && s.input >= sym.args.length)){
+    if (sym.args.length == 0 || ("input" in s && s.input >= sym.args.length)) {
         this.current = this.current.nextSibling;
-    }
-    else{
+    } else {
         this.down_from_f_to_blank();
         this.caret = this.current.firstChild.textContent.length;
     }
@@ -1095,103 +1227,108 @@ Engine.prototype.insert_symbol = function(sym_name){
     return true;
 }
 
-Engine.prototype.sel_get = function(){
-    if(this.sel_status == Engine.SEL_NONE){
+Engine.prototype.sel_get = function () {
+    if (this.sel_status == Engine.SEL_NONE) {
         return null;
     }
     var involved = [];
     var node_list = [];
     var remnant = null;
 
-    if(this.sel_start.node == this.sel_end.node){
-        return {"node_list":[this.make_e(this.sel_start.node.firstChild.nodeValue.substring(this.sel_start.caret, this.sel_end.caret))],
-                "remnant":this.make_e(this.sel_start.node.firstChild.nodeValue.substring(0, this.sel_start.caret) + this.sel_end.node.firstChild.nodeValue.substring(this.sel_end.caret)),
-                "involved":[this.sel_start.node]};
+    if (this.sel_start.node == this.sel_end.node) {
+        return {
+            "node_list": [this.make_e(this.sel_start.node.firstChild.nodeValue.substring(this.sel_start.caret, this.sel_end.caret))],
+            "remnant": this.make_e(this.sel_start.node.firstChild.nodeValue.substring(0, this.sel_start.caret) + this.sel_end.node.firstChild.nodeValue.substring(this.sel_end.caret)),
+            "involved": [this.sel_start.node]
+        };
     }
-    
+
     node_list.push(this.make_e(this.sel_start.node.firstChild.nodeValue.substring(this.sel_start.caret)));
     involved.push(this.sel_start.node);
     involved.push(this.sel_end.node);
     remnant = this.make_e(this.sel_start.node.firstChild.nodeValue.substring(0, this.sel_start.caret) + this.sel_end.node.firstChild.nodeValue.substring(this.sel_end.caret));
     var n = this.sel_start.node.nextSibling;
-    while(n != null && n != this.sel_end.node){
+    while (n != null && n != this.sel_end.node) {
         involved.push(n);
         node_list.push(n);
         n = n.nextSibling;
     }
     node_list.push(this.make_e(this.sel_end.node.firstChild.nodeValue.substring(0, this.sel_end.caret)));
-    return {"node_list":node_list,
-            "remnant":remnant,
-            "involved":involved,
-            "cursor":0};
+    return {
+        "node_list": node_list,
+        "remnant": remnant,
+        "involved": involved,
+        "cursor": 0
+    };
 }
 
-Engine.prototype.make_e = function(text){
+Engine.prototype.make_e = function (text) {
     var base = this.doc.base;
     var new_node = base.createElement("e");
     new_node.appendChild(base.createTextNode(text));
     return new_node;
 }
 
-/** 
+/**
     Insert a string into the document at the current cursor position.
     @memberof Engine
     @param {string} s - The string to insert.
 */
-Engine.prototype.insert_string = function(s){
+Engine.prototype.insert_string = function (s) {
     var self = this;
-    if(this.sel_status != Engine.SEL_NONE){
+    if (this.sel_status != Engine.SEL_NONE) {
         this.sel_delete();
         this.sel_clear();
     }
-    this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.splice(this.caret,s)
+    this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.splice(this.caret, s)
     this.caret += s.length;
     this.checkpoint();
-    if(this.setting("autoreplace") == "auto") this.check_for_symbol(false);
-    if(this.setting("autoreplace") == "whole") this.check_for_symbol(true);
-    if(this.setting("autoreplace") == "delay" && setTimeout){
-        if(this.delayed_check) clearTimeout(this.delayed_check);
-        this.delayed_check = setTimeout(function(){ self.check_for_symbol(false); }, 200);
+    if (this.setting("autoreplace") == "auto") this.check_for_symbol(false);
+    if (this.setting("autoreplace") == "whole") this.check_for_symbol(true);
+    if (this.setting("autoreplace") == "delay" && setTimeout) {
+        if (this.delayed_check) clearTimeout(this.delayed_check);
+        this.delayed_check = setTimeout(function () {
+            self.check_for_symbol(false);
+        }, 200);
     }
 }
 
-/** 
+/**
     Insert a copy of the given document into the editor at the current cursor position.
     @memberof Engine
     @param {Doc} doc - The document to insert.
 */
-Engine.prototype.insert_doc = function(doc){
+Engine.prototype.insert_doc = function (doc) {
     this.insert_nodes(doc.root().childNodes, true);
 }
 
-/** 
+/**
     Copy the current selection, leaving the document unchanged but
     placing the contents of the current selection on the clipboard.
     @memberof Engine
 */
-Engine.prototype.sel_copy = function(){
+Engine.prototype.sel_copy = function () {
     var sel = this.sel_get();
-    if(!sel) return;
+    if (!sel) return;
     Engine.clipboard = [];
     var cliptype = this.setting("cliptype");
-    if(cliptype != "none") var clip_doc = new Doc("<m></m>");
-    for(var i = 0; i < sel.node_list.length; i++){
+    if (cliptype != "none") var clip_doc = new Doc("<m></m>");
+    for (var i = 0; i < sel.node_list.length; i++) {
         var node = sel.node_list[i].cloneNode(true);
         Engine.clipboard.push(node);
-        if(cliptype != "none") clip_doc.root().appendChild(node.cloneNode(true));//clip_text += this.doc.manual_render(cliptype, node);
+        if (cliptype != "none") clip_doc.root().appendChild(node.cloneNode(true)); //clip_text += this.doc.manual_render(cliptype, node);
     }
-    if(cliptype != "none"){
-        try{
+    if (cliptype != "none") {
+        try {
             this.system_copy(clip_doc.get_content(cliptype));
-        }
-        catch(e){
+        } catch (e) {
             this.system_copy("Syntax error");
         }
     }
     this.sel_clear();
 }
 
-Engine.prototype.system_copy = function(text) {
+Engine.prototype.system_copy = function (text) {
     if (window.clipboardData && window.clipboardData.setData)
         return window.clipboardData.setData("Text", text);
     else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
@@ -1201,103 +1338,105 @@ Engine.prototype.system_copy = function(text) {
         textarea.style.background = "transparent";
         document.body.appendChild(textarea);
         textarea.select();
-        try { return document.execCommand("copy"); }
-        catch (ex) { return false; }
-        finally { document.body.removeChild(textarea); }
-    }
-}
-
-/** 
-    Cut the current selection, removing it from the document and placing it in the clipboard.
-    @memberof Engine
-*/
-Engine.prototype.sel_cut = function(){
-    var node_list = this.sel_delete();
-    if(!node_list) return;
-    Engine.clipboard = [];
-    var cliptype = this.setting("cliptype");
-    var clip_text = "";
-    for(var i = 0; i < node_list.length; i++){
-        var node = node_list[i].cloneNode(true);
-        Engine.clipboard.push(node);
-        if(cliptype != "none") clip_text += this.doc.manual_render(cliptype, node);
-    }
-    if(cliptype != "none") this.system_copy(clip_text);
-    this.sel_clear();
-    this.checkpoint();
-}
-
-Engine.prototype.insert_nodes = function(node_list, move_cursor){
-    var real_clipboard = [];
-    for(var i = 0; i < node_list.length; i++){
-        real_clipboard.push(node_list[i].cloneNode(true));
-    }
-
-    if(real_clipboard.length == 1){
-        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.substring(0,this.caret) + real_clipboard[0].firstChild.nodeValue + this.current.firstChild.nodeValue.substring(this.caret);
-        if(move_cursor) this.caret += real_clipboard[0].firstChild.nodeValue.length;
-    }
-    else{
-        var nn = this.make_e(real_clipboard[real_clipboard.length-1].firstChild.nodeValue + this.current.firstChild.nodeValue.substring(this.caret));
-        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.substring(0,this.caret) + real_clipboard[0].firstChild.nodeValue;
-        if(this.current.nextSibling == null)
-            this.current.parentNode.appendChild(nn)
-        else
-            this.current.parentNode.insertBefore(nn, this.current.nextSibling)
-        for(var j = 1; j < real_clipboard.length - 1; j++)
-            this.current.parentNode.insertBefore(real_clipboard[j], nn);
-        if(move_cursor){
-            this.current = nn;
-            this.caret = real_clipboard[real_clipboard.length-1].firstChild.nodeValue.length
+        try {
+            return document.execCommand("copy");
+        } catch (ex) {
+            return false;
+        } finally {
+            document.body.removeChild(textarea);
         }
     }
 }
 
-/** 
+/**
+    Cut the current selection, removing it from the document and placing it in the clipboard.
+    @memberof Engine
+*/
+Engine.prototype.sel_cut = function () {
+    var node_list = this.sel_delete();
+    if (!node_list) return;
+    Engine.clipboard = [];
+    var cliptype = this.setting("cliptype");
+    var clip_text = "";
+    for (var i = 0; i < node_list.length; i++) {
+        var node = node_list[i].cloneNode(true);
+        Engine.clipboard.push(node);
+        if (cliptype != "none") clip_text += this.doc.manual_render(cliptype, node);
+    }
+    if (cliptype != "none") this.system_copy(clip_text);
+    this.sel_clear();
+    this.checkpoint();
+}
+
+Engine.prototype.insert_nodes = function (node_list, move_cursor) {
+    var real_clipboard = [];
+    for (var i = 0; i < node_list.length; i++) {
+        real_clipboard.push(node_list[i].cloneNode(true));
+    }
+
+    if (real_clipboard.length == 1) {
+        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.substring(0, this.caret) + real_clipboard[0].firstChild.nodeValue + this.current.firstChild.nodeValue.substring(this.caret);
+        if (move_cursor) this.caret += real_clipboard[0].firstChild.nodeValue.length;
+    } else {
+        var nn = this.make_e(real_clipboard[real_clipboard.length - 1].firstChild.nodeValue + this.current.firstChild.nodeValue.substring(this.caret));
+        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.substring(0, this.caret) + real_clipboard[0].firstChild.nodeValue;
+        if (this.current.nextSibling == null)
+            this.current.parentNode.appendChild(nn)
+        else
+            this.current.parentNode.insertBefore(nn, this.current.nextSibling)
+        for (var j = 1; j < real_clipboard.length - 1; j++)
+            this.current.parentNode.insertBefore(real_clipboard[j], nn);
+        if (move_cursor) {
+            this.current = nn;
+            this.caret = real_clipboard[real_clipboard.length - 1].firstChild.nodeValue.length
+        }
+    }
+}
+
+/**
     Paste the current contents of the clipboard.
     @memberof Engine
 */
-Engine.prototype.sel_paste = function(){
+Engine.prototype.sel_paste = function () {
     this.sel_delete();
     this.sel_clear();
-    if(!(Engine.clipboard) || Engine.clipboard.length == 0) return;
+    if (!(Engine.clipboard) || Engine.clipboard.length == 0) return;
     this.insert_nodes(Engine.clipboard, true);
     this.checkpoint();
     return;
 }
 
-/** 
+/**
     Clear the current selection, leaving the document unchanged and
     nothing selected.
     @memberof Engine
 */
-Engine.prototype.sel_clear = function(){
-    this.sel_start = null;    
+Engine.prototype.sel_clear = function () {
+    this.sel_start = null;
     this.sel_end = null;
     this.sel_status = Engine.SEL_NONE;
 }
 
-/** 
+/**
     Delete the current selection.
     @memberof Engine
 */
-Engine.prototype.sel_delete = function(){
+Engine.prototype.sel_delete = function () {
     var sel = this.sel_get();
-    if(!sel) return null;
+    if (!sel) return null;
     var sel_parent = sel.involved[0].parentNode;
     var sel_prev = sel.involved[0].previousSibling;
-    for(var i = 0; i < sel.involved.length; i++){
+    for (var i = 0; i < sel.involved.length; i++) {
         var n = sel.involved[i];
         sel_parent.removeChild(n);
     }
-    if(sel_prev == null){
-        if(sel_parent.firstChild == null)
+    if (sel_prev == null) {
+        if (sel_parent.firstChild == null)
             sel_parent.appendChild(sel.remnant);
         else
             sel_parent.insertBefore(sel.remnant, sel_parent.firstChild);
-    }
-    else if(sel_prev.nodeName == 'f'){
-        if(sel_prev.nextSibling == null)
+    } else if (sel_prev.nodeName == 'f') {
+        if (sel_prev.nextSibling == null)
             sel_parent.appendChild(sel.remnant);
         else
             sel_parent.insertBefore(sel.remnant, sel_prev.nextSibling);
@@ -1307,119 +1446,131 @@ Engine.prototype.sel_delete = function(){
     return sel.node_list;
 }
 
-/** 
+/**
     Select the entire contents of the editor.
     @memberof Engine
 */
-Engine.prototype.sel_all = function(){
+Engine.prototype.sel_all = function () {
     this.home();
     this.set_sel_start();
     this.end();
     this.set_sel_end();
-    if(this.sel_start.node != this.sel_end.node || this.sel_start.caret != this.sel_end.caret)
+    if (this.sel_start.node != this.sel_end.node || this.sel_start.caret != this.sel_end.caret)
         this.sel_status = Engine.SEL_CURSOR_AT_END;
 }
 
-/** 
+/**
     function
     @memberof Engine
     @param {string} name - param
 */
-Engine.prototype.sel_right = function(){
-    if(this.sel_status == Engine.SEL_NONE){
+Engine.prototype.sel_right = function () {
+    if (this.sel_status == Engine.SEL_NONE) {
         this.set_sel_start();
         this.sel_status = Engine.SEL_CURSOR_AT_END;
     }
-    if(this.caret >= Utils.get_length(this.current)){
+    if (this.caret >= Utils.get_length(this.current)) {
         var nn = this.current.nextSibling;
-        if(nn != null){
+        if (nn != null) {
             this.current = nn.nextSibling;
             this.caret = 0;
             this.set_sel_boundary(Engine.SEL_CURSOR_AT_END);
-        }
-        else{
+        } else {
             this.set_sel_boundary(Engine.SEL_CURSOR_AT_END);
         }
-    }
-    else{
+    } else {
         this.caret += 1;
         this.set_sel_boundary(Engine.SEL_CURSOR_AT_END);
     }
-    if(this.sel_start.node == this.sel_end.node && this.sel_start.caret == this.sel_end.caret){
+    if (this.sel_start.node == this.sel_end.node && this.sel_start.caret == this.sel_end.caret) {
         this.sel_status = Engine.SEL_NONE;
     }
 }
 
-Engine.prototype.set_sel_boundary = function(sstatus, mouse){
-    if(this.sel_status == Engine.SEL_NONE || mouse) this.sel_status = sstatus;
-    if(this.sel_status == Engine.SEL_CURSOR_AT_START)
+Engine.prototype.set_sel_boundary = function (sstatus, mouse) {
+    if (this.sel_status == Engine.SEL_NONE || mouse) this.sel_status = sstatus;
+    if (this.sel_status == Engine.SEL_CURSOR_AT_START)
         this.set_sel_start();
-    else if(this.sel_status == Engine.SEL_CURSOR_AT_END)
+    else if (this.sel_status == Engine.SEL_CURSOR_AT_END)
         this.set_sel_end();
 }
 
-/** 
+/**
     Move the cursor to the left, adjusting the selection along with
     the cursor.
     @memberof Engine
 */
-Engine.prototype.sel_left = function(){
-    if(this.sel_status == Engine.SEL_NONE){
+Engine.prototype.sel_left = function () {
+    if (this.sel_status == Engine.SEL_NONE) {
         this.set_sel_end();
         this.sel_status = Engine.SEL_CURSOR_AT_START;
     }
-    if(this.caret <= 0){
+    if (this.caret <= 0) {
         var nn = this.current.previousSibling;
-        if(nn != null){
+        if (nn != null) {
             this.current = nn.previousSibling;
             this.caret = this.current.firstChild.nodeValue.length;
             this.set_sel_boundary(Engine.SEL_CURSOR_AT_START);
-        }
-        else{
+        } else {
             this.set_sel_boundary(Engine.SEL_CURSOR_AT_START);
         }
-    }
-    else{
+    } else {
         this.caret -= 1;
         this.set_sel_boundary(Engine.SEL_CURSOR_AT_START);
     }
-    if(this.sel_start.node == this.sel_end.node && this.sel_start.caret == this.sel_end.caret){
+    if (this.sel_start.node == this.sel_end.node && this.sel_start.caret == this.sel_end.caret) {
         this.sel_status = Engine.SEL_NONE;
     }
 }
 
-Engine.prototype.list_extend_copy_right = function(){this.list_extend("right", true);}
-Engine.prototype.list_extend_copy_left = function(){this.list_extend("left", true);}
-Engine.prototype.list_extend_right = function(){this.list_extend("right", false);}
-Engine.prototype.list_extend_left = function(){this.list_extend("left", false);}
-Engine.prototype.list_extend_up = function(){this.list_extend("up", false);}
-Engine.prototype.list_extend_down = function(){this.list_extend("down", false);}
-Engine.prototype.list_extend_copy_up = function(){this.list_extend("up", true);}
-Engine.prototype.list_extend_copy_down = function(){this.list_extend("down", true);}
+Engine.prototype.list_extend_copy_right = function () {
+    this.list_extend("right", true);
+}
+Engine.prototype.list_extend_copy_left = function () {
+    this.list_extend("left", true);
+}
+Engine.prototype.list_extend_right = function () {
+    this.list_extend("right", false);
+}
+Engine.prototype.list_extend_left = function () {
+    this.list_extend("left", false);
+}
+Engine.prototype.list_extend_up = function () {
+    this.list_extend("up", false);
+}
+Engine.prototype.list_extend_down = function () {
+    this.list_extend("down", false);
+}
+Engine.prototype.list_extend_copy_up = function () {
+    this.list_extend("up", true);
+}
+Engine.prototype.list_extend_copy_down = function () {
+    this.list_extend("down", true);
+}
 
-/** 
-    Move the cursor by one row up or down in a matrix. 
+/**
+    Move the cursor by one row up or down in a matrix.
     @memberof Engine
     @param {boolean} down - If `true`, move down in the matrix;
     otherwise, up.
 */
-Engine.prototype.list_vertical_move = function(down){
+Engine.prototype.list_vertical_move = function (down) {
     var n = this.current;
-    while(n.parentNode && n.parentNode.parentNode && !(n.nodeName == 'c' && n.parentNode.nodeName == 'l' && n.parentNode.parentNode.nodeName == 'l')){
+    while (n.parentNode && n.parentNode.parentNode && !(n.nodeName == 'c' && n.parentNode.nodeName == 'l' && n.parentNode.parentNode.nodeName == 'l')) {
         n = n.parentNode;
     }
-    if(!n.parentNode) return;
+    if (!n.parentNode) return;
     var pos = 1;
     var cc = n;
-    while(cc.previousSibling != null){
+    while (cc.previousSibling != null) {
         pos++;
         cc = cc.previousSibling;
     }
     var new_l = down ? n.parentNode.nextSibling : n.parentNode.previousSibling
-    if(!new_l) return;
+    if (!new_l) return;
     var idx = 1;
     var nn = new_l.firstChild;
-    while(idx < pos){
+    while (idx < pos) {
         idx++;
         nn = nn.nextSibling;
     }
@@ -1427,48 +1578,55 @@ Engine.prototype.list_vertical_move = function(down){
     this.caret = down ? 0 : this.current.firstChild.textContent.length;
 }
 
-/** 
+/**
     Add an element to a list (or row/column to a matrix) in the
     specified direction.  Can optionally copy the current
     element/row/column to the new one.
     @memberof Engine
     @param {string} direction - One of `"up"`, `"down"`, `"left"`, or
-    `"right"`.  
+    `"right"`.
     @param {boolean} copy - Whether or not to copy the current
     element/row/column into the new one.
 */
-Engine.prototype.list_extend = function(direction, copy){
+Engine.prototype.list_extend = function (direction, copy) {
     var base = this.doc.base;
     var vertical = direction == "up" || direction == "down";
     var before = direction == "up" || direction == "left";
     var this_name = vertical ? "l" : "c";
     var n = this.current;
-    while(n.parentNode && !(n.nodeName == this_name && n.parentNode.nodeName == 'l')){
+    while (n.parentNode && !(n.nodeName == this_name && n.parentNode.nodeName == 'l')) {
         n = n.parentNode;
     }
-    if(!n.parentNode) return;
+    if (!n.parentNode) return;
     var to_insert;
-    
-    // check if 2D and horizontal and extend all the other rows if so 
-    if(!vertical && n.parentNode.parentNode.nodeName == "l"){
+
+    // check if 2D and horizontal and extend all the other rows if so
+    if (!vertical && n.parentNode.parentNode.nodeName == "l") {
         to_insert = base.createElement("c");
         to_insert.appendChild(this.make_e(""));
         var pos = 1;
         var cc = n;
-        while(cc.previousSibling != null){
+        while (cc.previousSibling != null) {
             pos++;
             cc = cc.previousSibling;
         }
         var to_modify = [];
-        var iterator = this.doc.xpath_list("./l/c[position()="+pos+"]", n.parentNode.parentNode);
-	var nn = null;
-        try{ for(nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext()){ to_modify.push(nn); }}
-        catch(e) { this.fire_event("error",{"message":'XML modified during iteration? ' + e}); }
-        for(var j = 0; j < to_modify.length; j++){
+        var iterator = this.doc.xpath_list("./l/c[position()=" + pos + "]", n.parentNode.parentNode);
+        var nn = null;
+        try {
+            for (nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext()) {
+                to_modify.push(nn);
+            }
+        } catch (e) {
+            this.fire_event("error", {
+                "message": 'XML modified during iteration? ' + e
+            });
+        }
+        for (var j = 0; j < to_modify.length; j++) {
             nn = to_modify[j];
-            if(copy) nn.parentNode.insertBefore(nn.cloneNode(true), before ? nn : nn.nextSibling);
+            if (copy) nn.parentNode.insertBefore(nn.cloneNode(true), before ? nn : nn.nextSibling);
             else nn.parentNode.insertBefore(to_insert.cloneNode(true), before ? nn : nn.nextSibling);
-            nn.parentNode.setAttribute("s",parseInt(nn.parentNode.getAttribute("s"))+1);
+            nn.parentNode.setAttribute("s", parseInt(nn.parentNode.getAttribute("s")) + 1);
         }
         this.sel_clear();
         this.current = before ? n.previousSibling.lastChild : n.nextSibling.firstChild;
@@ -1476,193 +1634,188 @@ Engine.prototype.list_extend = function(direction, copy){
         this.checkpoint();
         return;
     }
-    
-    if(copy){
+
+    if (copy) {
         to_insert = n.cloneNode(true);
-    }
-    else{
-        if(vertical){
+    } else {
+        if (vertical) {
             to_insert = base.createElement("l");
-            to_insert.setAttribute("s",n.getAttribute("s"))
-            for(var i = 0; i < parseInt(n.getAttribute("s")); i++){
+            to_insert.setAttribute("s", n.getAttribute("s"))
+            for (var i = 0; i < parseInt(n.getAttribute("s")); i++) {
                 var c = base.createElement("c");
                 c.appendChild(this.make_e(""));
                 to_insert.appendChild(c);
             }
-        }
-        else{
+        } else {
             to_insert = base.createElement("c");
             to_insert.appendChild(this.make_e(""));
         }
     }
-    n.parentNode.setAttribute("s",parseInt(n.parentNode.getAttribute("s"))+1);
+    n.parentNode.setAttribute("s", parseInt(n.parentNode.getAttribute("s")) + 1);
     n.parentNode.insertBefore(to_insert, before ? n : n.nextSibling);
     this.sel_clear();
-    if(vertical) this.current = to_insert.firstChild.firstChild;
+    if (vertical) this.current = to_insert.firstChild.firstChild;
     else this.current = to_insert.firstChild;
     this.caret = 0;
     this.checkpoint();
 }
 
-/** 
+/**
     Remove the current column from a matrix
     @memberof Engine
 */
-Engine.prototype.list_remove_col = function(){
+Engine.prototype.list_remove_col = function () {
     var n = this.current;
-    while(n.parentNode && n.parentNode.parentNode && !(n.nodeName == 'c' && n.parentNode.nodeName == 'l' && n.parentNode.parentNode.nodeName == 'l')){
+    while (n.parentNode && n.parentNode.parentNode && !(n.nodeName == 'c' && n.parentNode.nodeName == 'l' && n.parentNode.parentNode.nodeName == 'l')) {
         n = n.parentNode;
     }
-    if(!n.parentNode) return;
-    
+    if (!n.parentNode) return;
+
     // Don't remove if there is only a single column:
-    if(n.previousSibling != null){
+    if (n.previousSibling != null) {
         this.current = n.previousSibling.lastChild;
         this.caret = n.previousSibling.lastChild.firstChild.textContent.length;
-    }
-    else if(n.nextSibling != null){
+    } else if (n.nextSibling != null) {
         this.current = n.nextSibling.firstChild;
         this.caret = 0;
-    }
-    else return;
-    
+    } else return;
+
     var pos = 1;
     var cc = n;
-    
+
     // Find position of column
-    while(cc.previousSibling != null){
+    while (cc.previousSibling != null) {
         pos++;
         cc = cc.previousSibling;
     }
     var to_modify = [];
-    var iterator = this.doc.xpath_list("./l/c[position()="+pos+"]", n.parentNode.parentNode)
+    var iterator = this.doc.xpath_list("./l/c[position()=" + pos + "]", n.parentNode.parentNode)
     var nn = null;
-    try{ for(nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext()){ to_modify.push(nn); }}
-    catch(e) { this.fire_event("error",{"message":'XML modified during iteration? ' + e}); }
-    for(var j = 0; j < to_modify.length; j++){
+    try {
+        for (nn = iterator.iterateNext(); nn != null; nn = iterator.iterateNext()) {
+            to_modify.push(nn);
+        }
+    } catch (e) {
+        this.fire_event("error", {
+            "message": 'XML modified during iteration? ' + e
+        });
+    }
+    for (var j = 0; j < to_modify.length; j++) {
         nn = to_modify[j];
-        nn.parentNode.setAttribute("s",parseInt(nn.parentNode.getAttribute("s"))-1);
+        nn.parentNode.setAttribute("s", parseInt(nn.parentNode.getAttribute("s")) - 1);
         nn.parentNode.removeChild(nn);
     }
     this.checkpoint();
 }
 
-/** 
+/**
     Remove the current row from a matrix
     @memberof Engine
 */
-Engine.prototype.list_remove_row = function(){
+Engine.prototype.list_remove_row = function () {
     var n = this.current;
-    while(n.parentNode && !(n.nodeName == 'l' && n.parentNode.nodeName == 'l')){
+    while (n.parentNode && !(n.nodeName == 'l' && n.parentNode.nodeName == 'l')) {
         n = n.parentNode;
     }
-    if(!n.parentNode) return;
+    if (!n.parentNode) return;
     // Don't remove if there is only a single row:
-    if(n.previousSibling != null){
+    if (n.previousSibling != null) {
         this.current = n.previousSibling.firstChild.lastChild;
         this.caret = n.previousSibling.lastChild.firstChild.textContent.length;
-    }
-    else if(n.nextSibling != null){
+    } else if (n.nextSibling != null) {
         this.current = n.nextSibling.firstChild.firstChild;
         this.caret = 0;
-    }
-    else return;
+    } else return;
 
-    n.parentNode.setAttribute("s",parseInt(n.parentNode.getAttribute("s"))-1);
+    n.parentNode.setAttribute("s", parseInt(n.parentNode.getAttribute("s")) - 1);
     n.parentNode.removeChild(n);
     this.checkpoint();
 }
 
-/** 
+/**
     Remove the current element from a list (or column from a matrix)
     @memberof Engine
 */
-Engine.prototype.list_remove = function(){
+Engine.prototype.list_remove = function () {
     var n = this.current;
-    while(n.parentNode && !(n.nodeName == 'c' && n.parentNode.nodeName == 'l')){
+    while (n.parentNode && !(n.nodeName == 'c' && n.parentNode.nodeName == 'l')) {
         n = n.parentNode;
     }
-    if(!n.parentNode) return;
-    if(n.parentNode.parentNode && n.parentNode.parentNode.nodeName == "l"){
+    if (!n.parentNode) return;
+    if (n.parentNode.parentNode && n.parentNode.parentNode.nodeName == "l") {
         this.list_remove_col();
         return;
     }
-    if(n.previousSibling != null){
+    if (n.previousSibling != null) {
         this.current = n.previousSibling.lastChild;
         this.caret = n.previousSibling.lastChild.firstChild.textContent.length;
-    }
-    else if(n.nextSibling != null){
+    } else if (n.nextSibling != null) {
         this.current = n.nextSibling.firstChild;
         this.caret = 0;
-    }
-    else return;
-    n.parentNode.setAttribute("s",parseInt(n.parentNode.getAttribute("s"))-1);
+    } else return;
+    n.parentNode.setAttribute("s", parseInt(n.parentNode.getAttribute("s")) - 1);
     n.parentNode.removeChild(n);
     this.checkpoint();
 }
 
-/** 
+/**
     Simulate the right arrow key press
     @memberof Engine
 */
-Engine.prototype.right = function(){
+Engine.prototype.right = function () {
     this.sel_clear();
-    if(this.caret >= Utils.get_length(this.current)){
+    if (this.caret >= Utils.get_length(this.current)) {
         var nn = this.doc.xpath_node("following::e[1]", this.current);
-        if(nn != null){
+        if (nn != null) {
             this.current = nn;
             this.caret = 0;
-        }
-        else{
+        } else {
             this.fire_event("right_end");
         }
-    }
-    else{
+    } else {
         this.caret += 1;
     }
 }
 
-/** 
+/**
     Simulate the spacebar key press
     @memberof Engine
 */
-Engine.prototype.spacebar = function(){
-    if(Utils.is_text(this.current)) this.insert_string(" ");
+Engine.prototype.spacebar = function () {
+    if (Utils.is_text(this.current)) this.insert_string(" ");
     else this.space_caret = this.caret;
 }
 
-/** 
+/**
     Simulate the left arrow key press
     @memberof Engine
 */
-Engine.prototype.left = function(){
+Engine.prototype.left = function () {
     this.sel_clear();
-    if(this.caret <= 0){
+    if (this.caret <= 0) {
         var pn = this.doc.xpath_node("preceding::e[1]", this.current);
-        if(pn != null){
+        if (pn != null) {
             this.current = pn;
             this.caret = this.current.firstChild.nodeValue.length;
-        }
-        else{
+        } else {
             this.fire_event("left_end");
         }
-    }
-    else{
+    } else {
         this.caret -= 1;
     }
 }
 
-Engine.prototype.delete_from_c = function(){
+Engine.prototype.delete_from_c = function () {
     var pos = 0;
     var c = this.current.parentNode;
-    while(c && c.nodeName == "c"){
+    while (c && c.nodeName == "c") {
         pos++;
         c = c.previousSibling;
     }
     var idx = this.current.parentNode.getAttribute("delete");
-    var survivor_node = this.doc.xpath_node("./c[position()="+idx+"]", this.current.parentNode.parentNode);
+    var survivor_node = this.doc.xpath_node("./c[position()=" + idx + "]", this.current.parentNode.parentNode);
     var survivor_nodes = [];
-    for(var n = survivor_node.firstChild; n != null; n = n.nextSibling){
+    for (var n = survivor_node.firstChild; n != null; n = n.nextSibling) {
         survivor_nodes.push(n);
     }
     this.current = this.current.parentNode.parentNode;
@@ -1670,69 +1823,60 @@ Engine.prototype.delete_from_c = function(){
     this.insert_nodes(survivor_nodes, pos > idx);
 }
 
-Engine.prototype.delete_from_e = function(){
+Engine.prototype.delete_from_e = function () {
     // return false if we deleted something, and true otherwise.
-    if(this.caret > 0){
-        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.splicen(this.caret-1,"",1);
+    if (this.caret > 0) {
+        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.splicen(this.caret - 1, "", 1);
         this.caret--;
-    }
-    else{
+    } else {
         // The order of these is important
-        if(this.current.previousSibling != null && Utils.is_char(this.current.previousSibling)){
+        if (this.current.previousSibling != null && Utils.is_char(this.current.previousSibling)) {
             // The previous node is an f node but is really just a character.  Delete it.
             this.current = this.current.previousSibling;
             this.delete_from_f();
-        }
-        else if(this.current.previousSibling != null && this.current.previousSibling.nodeName == 'f'){
+        } else if (this.current.previousSibling != null && this.current.previousSibling.nodeName == 'f') {
             // We're in an e node just after an f node.  Move back into the f node (delete it?)
             this.left();
             return false;
-        }
-        else if(this.current.parentNode.previousSibling != null && this.current.parentNode.previousSibling.nodeName == 'c'){
+        } else if (this.current.parentNode.previousSibling != null && this.current.parentNode.previousSibling.nodeName == 'c') {
             // We're in a c child of an f node, but not the first one.  Go to the previous c
-            if(this.current.parentNode.hasAttribute("delete")){
+            if (this.current.parentNode.hasAttribute("delete")) {
                 this.delete_from_c();
-            }
-            else{
+            } else {
                 this.left();
                 return false;
             }
-        }
-        else if(this.current.previousSibling == null && this.current.parentNode.nodeName == 'c' && (this.current.parentNode.previousSibling == null || this.current.parentNode.previousSibling.nodeName != 'c')){
+        } else if (this.current.previousSibling == null && this.current.parentNode.nodeName == 'c' && (this.current.parentNode.previousSibling == null || this.current.parentNode.previousSibling.nodeName != 'c')) {
             // We're in the first c child of an f node and at the beginning--delete the f node
             var par = this.current.parentNode;
-            while(par.parentNode.nodeName == 'l' || par.parentNode.nodeName == 'c'){
+            while (par.parentNode.nodeName == 'l' || par.parentNode.nodeName == 'c') {
                 par = par.parentNode;
             }
-            if(par.hasAttribute("delete")){
+            if (par.hasAttribute("delete")) {
                 this.delete_from_c();
-            }
-            else{
+            } else {
                 this.current = par.parentNode;
                 this.delete_from_f();
             }
-        }
-        else{
-            // We're at the beginning (hopefully!) 
+        } else {
+            // We're at the beginning (hopefully!)
             return false;
         }
     }
     return true;
 }
 
-Engine.prototype.delete_forward_from_e = function(){
+Engine.prototype.delete_forward_from_e = function () {
     // return false if we deleted something, and true otherwise.
-    if(this.caret < this.current.firstChild.nodeValue.length){
-        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.splicen(this.caret,"",1);
-    }
-    else{
+    if (this.caret < this.current.firstChild.nodeValue.length) {
+        this.current.firstChild.nodeValue = this.current.firstChild.nodeValue.splicen(this.caret, "", 1);
+    } else {
         //We're at the end
-        if(this.current.nextSibling != null){
+        if (this.current.nextSibling != null) {
             // The next node is an f node.  Delete it.
             this.current = this.current.nextSibling;
             this.delete_from_f();
-        }
-        else if(this.current.parentNode.nodeName == 'c'){
+        } else if (this.current.parentNode.nodeName == 'c') {
             // We're in a c child of an f node.  Do nothing
             return false;
         }
@@ -1740,227 +1884,234 @@ Engine.prototype.delete_forward_from_e = function(){
     return true;
 }
 
-/** 
+/**
     Simulate the "backspace" key press
     @memberof Engine
 */
-Engine.prototype.backspace = function(){
-    if(this.sel_status != Engine.SEL_NONE){
+Engine.prototype.backspace = function () {
+    if (this.sel_status != Engine.SEL_NONE) {
         this.sel_delete();
         this.sel_status = Engine.SEL_NONE;
         this.checkpoint();
-    }
-    else if(this.delete_from_e()){
+    } else if (this.delete_from_e()) {
         this.checkpoint();
     }
 }
 
-/** 
+/**
     Simulate the "delete" key press
     @memberof Engine
 */
-Engine.prototype.delete_key = function(){
-    if(this.sel_status != Engine.SEL_NONE){
+Engine.prototype.delete_key = function () {
+    if (this.sel_status != Engine.SEL_NONE) {
         this.sel_delete();
         this.sel_status = Engine.SEL_NONE;
         this.checkpoint();
-    }
-    else if(this.delete_forward_from_e()){
+    } else if (this.delete_forward_from_e()) {
         this.checkpoint();
     }
 }
 
-Engine.prototype.backslash = function(){
-    if(Utils.is_text(this.current)) return;
+Engine.prototype.backslash = function () {
+    if (Utils.is_text(this.current)) return;
     this.insert_symbol("sym_name");
 }
 
-/** 
+/**
     Simulate a tab key press
     @memberof Engine
 */
-Engine.prototype.tab = function(){
-    if(!Utils.is_symbol(this.current)){
+Engine.prototype.tab = function () {
+    if (!Utils.is_symbol(this.current)) {
         this.check_for_symbol();
         return;
     }
     var sym_name = this.current.firstChild.textContent;
     var candidates = [];
-    for(var n in this.symbols){
-        if(n.startsWith(sym_name)) candidates.push(n);
+    for (var n in this.symbols) {
+        if (n.startsWith(sym_name)) candidates.push(n);
     }
-    if(candidates.length == 1){
+    if (candidates.length == 1) {
         this.current.firstChild.textContent = candidates[0];
         this.caret = candidates[0].length;
-    }
-    else {
-        this.fire_event("completion",{"candidates":candidates});
+    } else {
+        this.fire_event("completion", {
+            "candidates": candidates
+        });
     }
 }
 
-Engine.prototype.right_paren = function(){
-    if(this.current.nodeName == 'e' && this.caret < this.current.firstChild.nodeValue.length - 1) return;
+Engine.prototype.right_paren = function () {
+    if (this.current.nodeName == 'e' && this.caret < this.current.firstChild.nodeValue.length - 1) return;
     else this.right();
 }
 
-/** 
+/**
     Simulate an up arrow key press
     @memberof Engine
 */
-Engine.prototype.up = function(){
+Engine.prototype.up = function () {
     this.sel_clear();
-    if(this.current.parentNode.hasAttribute("up")){
+    if (this.current.parentNode.hasAttribute("up")) {
         var t = parseInt(this.current.parentNode.getAttribute("up"));
         var f = this.current.parentNode.parentNode;
         var n = f.firstChild;
-        while(n != null && t > 0){
-            if(n.nodeName == 'c') t--;
-            if(t > 0) n = n.nextSibling;
+        while (n != null && t > 0) {
+            if (n.nodeName == 'c') t--;
+            if (t > 0) n = n.nextSibling;
         }
         this.current = n.lastChild;
         this.caret = this.current.firstChild.nodeValue.length;
-    }
-    else this.list_vertical_move(false);
+    } else this.list_vertical_move(false);
 }
 
-/** 
+/**
     Simulate a down arrow key press
     @memberof Engine
 */
-Engine.prototype.down = function(){
+Engine.prototype.down = function () {
     this.sel_clear();
-    if(this.current.parentNode.hasAttribute("down")){
+    if (this.current.parentNode.hasAttribute("down")) {
         var t = parseInt(this.current.parentNode.getAttribute("down"));
         var f = this.current.parentNode.parentNode;
         var n = f.firstChild;
-        while(n != null && t > 0){
-            if(n.nodeName == 'c') t--;
-            if(t > 0) n = n.nextSibling;
+        while (n != null && t > 0) {
+            if (n.nodeName == 'c') t--;
+            if (t > 0) n = n.nextSibling;
         }
         this.current = n.lastChild;
         this.caret = this.current.firstChild.nodeValue.length;
-    }
-    else this.list_vertical_move(true);
+    } else this.list_vertical_move(true);
 }
 
-/** 
+/**
     Move the cursor to the beginning of the document
     @memberof Engine
 */
-Engine.prototype.home = function(){
+Engine.prototype.home = function () {
     this.current = this.doc.root().firstChild;
     this.caret = 0;
 }
 
-/** 
+/**
     Move the cursor to the end of the document
     @memberof Engine
 */
-Engine.prototype.end = function(){
+Engine.prototype.end = function () {
     this.current = this.doc.root().lastChild;
     this.caret = this.current.firstChild.nodeValue.length;
 }
 
-Engine.prototype.checkpoint = function(){
+Engine.prototype.checkpoint = function () {
     var base = this.doc.base;
-    this.current.setAttribute("current","yes");
-    this.current.setAttribute("caret",this.caret.toString());
+    this.current.setAttribute("current", "yes");
+    this.current.setAttribute("caret", this.caret.toString());
     this.undo_now++;
     this.undo_data[this.undo_now] = base.cloneNode(true);
-    this.undo_data.splice(this.undo_now+1, this.undo_data.length);
-    var old_data = this.undo_data[this.undo_now-1] ? (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now-1]) : "[none]";
+    this.undo_data.splice(this.undo_now + 1, this.undo_data.length);
+    var old_data = this.undo_data[this.undo_now - 1] ? (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now - 1]) : "[none]";
     var new_data = (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now]);
-    this.fire_event("change",{"old":old_data,"new":new_data});
+    this.fire_event("change", {
+        "old": old_data,
+        "new": new_data
+    });
     this.current.removeAttribute("current");
     this.current.removeAttribute("caret");
-    if(this.parent && this.parent.ready) this.parent.render(true);
+    if (this.parent && this.parent.ready) this.parent.render(true);
 }
 
-Engine.prototype.restore = function(t){
+Engine.prototype.restore = function (t) {
     this.doc.base = this.undo_data[t].cloneNode(true);
     this.find_current();
     this.current.removeAttribute("current");
     this.current.removeAttribute("caret");
 }
 
-Engine.prototype.find_current = function(){
+Engine.prototype.find_current = function () {
     this.current = this.doc.xpath_node("//*[@current='yes']");
     this.caret = parseInt(this.current.getAttribute("caret"));
 }
 
-/** 
+/**
     Undo the last action
     @memberof Engine
 */
-Engine.prototype.undo = function(){
+Engine.prototype.undo = function () {
     this.sel_clear();
-    if(this.undo_now <= 0) return;
+    if (this.undo_now <= 0) return;
     this.undo_now--;
     this.restore(this.undo_now);
-    var old_data = this.undo_data[this.undo_now+1] ? (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now+1]) : "[none]";
+    var old_data = this.undo_data[this.undo_now + 1] ? (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now + 1]) : "[none]";
     var new_data = (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now]);
-    this.fire_event("change",{"old":old_data,"new":new_data});
+    this.fire_event("change", {
+        "old": old_data,
+        "new": new_data
+    });
 }
 
-/** 
+/**
     Redo the last undone action
     @memberof Engine
 */
-Engine.prototype.redo = function(){
+Engine.prototype.redo = function () {
     this.sel_clear();
-    if(this.undo_now >= this.undo_data.length-1) return;
+    if (this.undo_now >= this.undo_data.length - 1) return;
     this.undo_now++;
     this.restore(this.undo_now);
-    var old_data = this.undo_data[this.undo_now-1] ? (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now-1]) : "[none]";
+    var old_data = this.undo_data[this.undo_now - 1] ? (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now - 1]) : "[none]";
     var new_data = (new XMLSerializer()).serializeToString(this.undo_data[this.undo_now]);
-    this.fire_event("change",{"old":old_data,"new":new_data});
+    this.fire_event("change", {
+        "old": old_data,
+        "new": new_data
+    });
 }
 
-/** 
+/**
     Execute the "done" callback
     @memberof Engine
 */
-Engine.prototype.done = function(){
-    if(Utils.is_symbol(this.current)) this.complete_symbol();
+Engine.prototype.done = function () {
+    if (Utils.is_symbol(this.current)) this.complete_symbol();
     else this.fire_event("done");
 }
 
-Engine.prototype.complete_symbol = function(){
+Engine.prototype.complete_symbol = function () {
     var sym_name = this.current.firstChild.textContent;
-    if(!(this.symbols[sym_name])) return;
+    if (!(this.symbols[sym_name])) return;
     this.current = this.current.parentNode.parentNode;
     this.delete_from_f();
     this.insert_symbol(sym_name);
 }
 
-Engine.prototype.problem = function(message){
-    this.fire_event("error",{"message":message});
+Engine.prototype.problem = function (message) {
+    this.fire_event("error", {
+        "message": message
+    });
 }
 
-Engine.prototype.is_blacklisted = function(symb_type){
+Engine.prototype.is_blacklisted = function (symb_type) {
     var blacklist = this.setting("blacklist");
-    for(var i = 0; i < blacklist.length; i++)
-        if(symb_type == blacklist[i]) return true;
+    for (var i = 0; i < blacklist.length; i++)
+        if (symb_type == blacklist[i]) return true;
     return false;
 }
 
-Engine.prototype.check_for_symbol = function(whole_node){
+Engine.prototype.check_for_symbol = function (whole_node) {
     var instance = this;
-    if(Utils.is_text(this.current)) return;
+    if (Utils.is_text(this.current)) return;
     var sym = "";
     var n = null;
-    if(whole_node){
+    if (whole_node) {
         n = instance.current.firstChild.nodeValue.substring(instance.space_caret, instance.caret);
         var m = /[a-zA-Z_]+$/.exec(n);
-        if(m){
+        if (m) {
             var s = m[0];
-            if(this.symbols[s]) sym = s;
+            if (this.symbols[s]) sym = s;
         }
-    }
-    else{    
+    } else {
         n = instance.current.firstChild.nodeValue.substring(instance.space_caret, instance.caret);
-        while(n.length > 0){
-            if(n in this.symbols){
+        while (n.length > 0) {
+            if (n in this.symbols) {
                 sym = n;
                 break;
             }
@@ -1968,21 +2119,20 @@ Engine.prototype.check_for_symbol = function(whole_node){
         }
     }
 
-    if(sym == "") return;
-    
+    if (sym == "") return;
+
     var temp = instance.current.firstChild.nodeValue;
     var temp_caret = instance.caret;
-    instance.current.firstChild.nodeValue = instance.current.firstChild.nodeValue.slice(0,instance.caret-sym.length)+instance.current.firstChild.nodeValue.slice(instance.caret);
+    instance.current.firstChild.nodeValue = instance.current.firstChild.nodeValue.slice(0, instance.caret - sym.length) + instance.current.firstChild.nodeValue.slice(instance.caret);
     instance.caret -= sym.length;
     var success = instance.insert_symbol(sym);
-    if(!success){
+    if (!success) {
         instance.current.firstChild.nodeValue = temp;
         instance.caret = temp_caret;
     }
 }
 
 module.exports = Engine;
-
 },{"./doc.js":4,"./settings.js":8,"./symbols.js":9,"./utils.js":10}],6:[function(require,module,exports){
 var Mousetrap = require('../lib/mousetrap/mousetrap.min.js');
 var katex = require('../lib/katex/katex-modified.min.js');
@@ -2009,9 +2159,9 @@ var Doc = require('./doc.js');
    function's documentation for the complete list.
    @constructor
 */
-var Guppy = function(id, config){
-    if(Guppy.instances[id]){
-        if(Guppy.instances[id].ready){
+var Guppy = function (id, config) {
+    if (Guppy.instances[id]) {
+        if (Guppy.instances[id].ready) {
             return Guppy.instances[id];
         }
         return null;
@@ -2025,26 +2175,34 @@ var Guppy = function(id, config){
 
     var tab_idx = Guppy.max_tabIndex || 0;
     guppy_div.tabIndex = tab_idx;
-    Guppy.max_tabIndex = tab_idx+1;
+    Guppy.max_tabIndex = tab_idx + 1;
 
     var buttons = settings['buttons'] || Settings.config.settings['buttons'];
     this.buttons_div = document.createElement("div");
-    this.buttons_div.setAttribute("class","guppy_buttons");
-    if(buttons){
-        for(var i = 0; i < buttons.length; i++){
-            if(buttons[i] == "osk" && Settings.osk){
-                Guppy.make_button("icons/keyboard.png", this.buttons_div, function() {
-                    if(Settings.osk.guppy == self){ Settings.osk.detach(self); }
-                    else{ Settings.osk.attach(self); }});
-            }
-            else if(buttons[i] == "settings") Guppy.make_button("icons/settings.png", this.buttons_div, function(){ Settings.toggle("settings", self); });
-            else if(buttons[i] == "symbols") Guppy.make_button("icons/symbols.png", this.buttons_div, function(){ Settings.toggle("symbols", self); });
-            else if(buttons[i] == "controls") Guppy.make_button("icons/help.png", this.buttons_div, function(){ Settings.toggle("controls", self); });
+    this.buttons_div.setAttribute("class", "guppy_buttons");
+    if (buttons) {
+        for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i] == "osk" && Settings.osk) {
+                Guppy.make_button("icons/keyboard.png", this.buttons_div, function () {
+                    if (Settings.osk.guppy == self) {
+                        Settings.osk.detach(self);
+                    } else {
+                        Settings.osk.attach(self);
+                    }
+                });
+            } else if (buttons[i] == "settings") Guppy.make_button("icons/settings.png", this.buttons_div, function () {
+                Settings.toggle("settings", self);
+            });
+            else if (buttons[i] == "symbols") Guppy.make_button("icons/symbols.png", this.buttons_div, function () {
+                Settings.toggle("symbols", self);
+            });
+            else if (buttons[i] == "controls") Guppy.make_button("icons/help.png", this.buttons_div, function () {
+                Settings.toggle("controls", self);
+            });
         }
     }
 
     this.editor_active = true;
-    //this.empty_content = settings['empty_content'] || "\\red{[?]}"
     this.editor = guppy_div;
     this.blacklist = [];
     this.autoreplace = true;
@@ -2056,11 +2214,17 @@ var Guppy = function(id, config){
 
     /**   @member {Engine} */
     this.engine = new Engine(config);
-    this.temp_cursor = {"node":null,"caret":0}
-    this.editor.addEventListener("keydown",Guppy.key_down, false);
-    this.editor.addEventListener("keyup",Guppy.key_up, false);
-    this.editor.addEventListener("focus", function() { Guppy.kb.alt_down = false; if(self.activate) self.activate();}, false);
-    if(Guppy.ready && !this.ready){
+    this.temp_cursor = {
+        "node": null,
+        "caret": 0
+    }
+    this.editor.addEventListener("keydown", Guppy.key_down, false);
+    this.editor.addEventListener("keyup", Guppy.key_up, false);
+    this.editor.addEventListener("focus", function () {
+        Guppy.kb.alt_down = false;
+        if (self.activate) self.activate();
+    }, false);
+    if (Guppy.ready && !this.ready) {
         this.ready = true;
         this.engine.fire_event("ready");
         this.render(true);
@@ -2076,16 +2240,16 @@ Guppy.active_guppy = null;
 Guppy.Symbols = Symbols;
 Guppy.Mousetrap = Mousetrap;
 
-Guppy.make_button = function(url, parent, cb){
+Guppy.make_button = function (url, parent, cb) {
     var b = document.createElement("img");
-    b.setAttribute("class","guppy-button");
+    b.setAttribute("class", "guppy-button");
     b.setAttribute("src", Settings.config.path + "/" + url);
     parent.appendChild(b);
-    if(cb){
-        b.addEventListener("mouseup", function(e){
+    if (cb) {
+        b.addEventListener("mouseup", function (e) {
             cb(e);
-            if(e.cancelBubble!=null) e.cancelBubble = true;
-            if(e.stopPropagation) e.stopPropagation();
+            if (e.cancelBubble != null) e.cancelBubble = true;
+            if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             return false;
         }, false);
@@ -2162,12 +2326,12 @@ Guppy.make_button = function(url, parent, cb){
     the symbol is itself a bracket/parenthesis equivalent.
     @param {string} [template] - The name of the template to use
 */
-Guppy.add_global_symbol = function(name, symbol, template){
-    if(template){
+Guppy.add_global_symbol = function (name, symbol, template) {
+    if (template) {
         symbol = Symbols.make_template_symbol(template, name, symbol);
     }
     Symbols.symbols[name] = JSON.parse(JSON.stringify(symbol));
-    for(var i in Guppy.instances){
+    for (var i in Guppy.instances) {
         Guppy.instances[i].engine.symbols[name] = JSON.parse(JSON.stringify(symbol));
     }
 }
@@ -2177,11 +2341,11 @@ Guppy.add_global_symbol = function(name, symbol, template){
     @memberof Guppy
     @param {string} name - The name of the symbol to remove
 */
-Guppy.remove_global_symbol = function(name){
-    if(Symbols.symbols[name]){
+Guppy.remove_global_symbol = function (name) {
+    if (Symbols.symbols[name]) {
         delete Symbols.symbols[name]
-        for(var i in Guppy.instances){
-            if(Guppy.instances[i].engine.symbols[name]){
+        for (var i in Guppy.instances) {
+            if (Guppy.instances[i].engine.symbols[name]) {
                 delete Guppy.instances[i].engine.symbols[name];
             }
         }
@@ -2244,70 +2408,65 @@ Guppy.remove_global_symbol = function(name){
    @param {function} [config.callback] - A function to be called when
    initialisation is complete.
 */
-Guppy.init = function(config){
-    var all_ready = function(){
+Guppy.init = function (config) {
+    var all_ready = function () {
         Settings.init(Symbols.symbols);
         Guppy.register_keyboard_handlers();
-        for(var i in Guppy.instances){
+        for (var i in Guppy.instances) {
             Guppy.instances[i].ready = true;
             Guppy.instances[i].render(true);
 
             // Set backend symbols
             Guppy.instances[i].engine.symbols = JSON.parse(JSON.stringify(Symbols.symbols));
 
-            // Set backend settings
-            // for(var s in Settings.config.settings){
-            //     Guppy.instances[i].engine.settings[s] = JSON.parse(JSON.stringify(Settings.config.settings[s]));
-            // }
-
             // Set backend events
-            for(var e in Settings.config.events){
+            for (var e in Settings.config.events) {
                 Guppy.instances[i].engine.events[e] = Settings.config.events[e];
             }
         }
         Engine.ready = true;
         Guppy.ready = true;
-        for(var j in Guppy.instances){
+        for (var j in Guppy.instances) {
             Guppy.instances[j].engine.ready = true;
             Guppy.instances[j].engine.fire_event("ready");
         }
-	if(config.callback) config.callback();
+        if (config.callback) config.callback();
     }
-    if(config.settings){
+    if (config.settings) {
         var settings = JSON.parse(JSON.stringify(config.settings));
-        for(var s in settings){
+        for (var s in settings) {
             Settings.config.settings[s] = settings[s];
         }
     }
-    if(config.events){
+    if (config.events) {
         Settings.config.events = config.events;
     }
-    if(config.osk){
-	Guppy.OSK = config.osk;
+    if (config.osk) {
+        Guppy.OSK = config.osk;
         Settings.osk = config.osk;
-        if(config.osk.config.attach == "focus"){
+        if (config.osk.config.attach == "focus") {
             var f = Settings.config.events["focus"];
-            Settings.config.events["focus"] = function(e){
-                if(f) f(e);
-                if(e.focused) config.osk.attach(e.target);
+            Settings.config.events["focus"] = function (e) {
+                if (f) f(e);
+                if (e.focused) config.osk.attach(e.target);
                 else config.osk.detach(e.target);
             };
         }
     }
-    if(config.path){
+    if (config.path) {
         Settings.config.path = config.path;
     }
-    if(config.symbols){
+    if (config.symbols) {
         var symbols = config.symbols;
-        if(!(Array.isArray(symbols))){
+        if (!(Array.isArray(symbols))) {
             symbols = [symbols];
         }
         var calls = [];
-        for(var i = 0; i < symbols.length; i++){
-            var x = function outer(j){
-                return function(callback){
+        for (var i = 0; i < symbols.length; i++) {
+            var x = function outer(j) {
+                return function (callback) {
                     var req = new XMLHttpRequest();
-                    req.onload = function(){
+                    req.onload = function () {
                         var syms = JSON.parse(this.responseText);
                         Symbols.add_symbols(syms);
                         callback();
@@ -2320,23 +2479,22 @@ Guppy.init = function(config){
         }
         calls.push(all_ready);
         var j = 0;
-        var cb = function(){
+        var cb = function () {
             j += 1;
-            if(j < calls.length) calls[j](cb);
+            if (j < calls.length) calls[j](cb);
         }
-        if(calls.length > 0) calls[0](cb);
-    }
-    else{
+        if (calls.length > 0) calls[0](cb);
+    } else {
         all_ready();
     }
 }
 
-Guppy.prototype.is_changed = function(){
+Guppy.prototype.is_changed = function () {
     var bb = this.editor.getElementsByClassName("katex")[0];
-    if(!bb) return;
+    if (!bb) return;
     var rect = bb.getBoundingClientRect();
     var ans = null;
-    if(this.bounding_box)
+    if (this.bounding_box)
         ans = this.bounding_box.top != rect.top || this.bounding_box.bottom != rect.bottom || this.bounding_box.right != rect.right || this.bounding_box.left != rect.left;
     else
         ans = true;
@@ -2344,33 +2502,37 @@ Guppy.prototype.is_changed = function(){
     return ans;
 }
 
-Guppy.prototype.recompute_locations_paths = function(){
+Guppy.prototype.recompute_locations_paths = function () {
     var ans = [];
     var bb = this.editor.getElementsByClassName("katex")[0];
-    if(!bb) return;
+    if (!bb) return;
     var rect = bb.getBoundingClientRect();
-    ans.push({'path':'all',
-              'top':rect.top,
-              'bottom':rect.bottom,
-              'left':rect.left,
-              'right':rect.right});
+    ans.push({
+        'path': 'all',
+        'top': rect.top,
+        'bottom': rect.bottom,
+        'left': rect.left,
+        'right': rect.right
+    });
     var elts = this.editor.getElementsByClassName("guppy_elt");
-    for(var i = 0; i < elts.length; i++){
+    for (var i = 0; i < elts.length; i++) {
         var elt = elts[i];
-        if(elt.nodeName == "mstyle") continue;
+        if (elt.nodeName == "mstyle") continue;
         rect = elt.getBoundingClientRect();
-        if(rect.top == 0 && rect.bottom == 0 && rect.left == 0 && rect.right == 0) continue;
+        if (rect.top == 0 && rect.bottom == 0 && rect.left == 0 && rect.right == 0) continue;
         var cl = elt.classList;
-        for(var j = 0; j < cl.length; j++){
-            if(cl[j].indexOf("guppy_loc") == 0){
-                ans.push({'path':cl[j],
-                          'top':rect.top,
-                          'bottom':rect.bottom,
-                          'left':rect.left,
-                          'right':rect.right,
-                          'mid_x':(rect.left+rect.right)/2,
-                          'mid_y':(rect.bottom+rect.top)/2,
-                          'blank':(' '+elt.className+' ').indexOf(' guppy_blank ') >= 0});
+        for (var j = 0; j < cl.length; j++) {
+            if (cl[j].indexOf("guppy_loc") == 0) {
+                ans.push({
+                    'path': cl[j],
+                    'top': rect.top,
+                    'bottom': rect.bottom,
+                    'left': rect.left,
+                    'right': rect.right,
+                    'mid_x': (rect.left + rect.right) / 2,
+                    'mid_y': (rect.bottom + rect.top) / 2,
+                    'blank': (' ' + elt.className + ' ').indexOf(' guppy_blank ') >= 0
+                });
                 break;
             }
         }
@@ -2378,7 +2540,7 @@ Guppy.prototype.recompute_locations_paths = function(){
     this.boxes = ans;
 }
 
-Guppy.get_loc = function(x,y,current_node,current_caret){
+Guppy.get_loc = function (x, y, current_node, current_caret) {
     var g = Guppy.active_guppy;
     var min_dist = -1;
     var mid_dist = 0;
@@ -2388,94 +2550,99 @@ Guppy.get_loc = function(x,y,current_node,current_caret){
     var car = null;
     // check if we go to first or last element
     var bb = g.editor.getElementsByClassName("katex")[0];
-    if(!bb) return;
-    if(current_node){
+    if (!bb) return;
+    if (current_node) {
         var current_path = Utils.path_to(current_node);
-        var current_pos = parseInt(current_path.substring(current_path.lastIndexOf("e")+1));
+        var current_pos = parseInt(current_path.substring(current_path.lastIndexOf("e") + 1));
     }
 
     var boxes = g.boxes;
-    if(!boxes) return;
-    if(current_node){
-        current_path = current_path.replace(/e[0-9]+$/,"e");
+    if (!boxes) return;
+    if (current_node) {
+        current_path = current_path.replace(/e[0-9]+$/, "e");
         var boxes2 = [];
-        for(var i = 0; i < boxes.length; i++){
-            if(boxes[i].path == "all") continue;
-            var loc = boxes[i].path.substring(0,boxes[i].path.lastIndexOf("_"));
-            loc = loc.replace(/e[0-9]+$/,"e");
-            if(loc == current_path){
+        for (var i = 0; i < boxes.length; i++) {
+            if (boxes[i].path == "all") continue;
+            var loc = boxes[i].path.substring(0, boxes[i].path.lastIndexOf("_"));
+            loc = loc.replace(/e[0-9]+$/, "e");
+            if (loc == current_path) {
                 boxes2.push(boxes[i]);
             }
         }
         boxes = boxes2;
     }
-    if(!boxes) return;
-    for(var j = 0; j < boxes.length; j++){
+    if (!boxes) return;
+    for (var j = 0; j < boxes.length; j++) {
         var box = boxes[j];
-        if(box.path == "all"){
-            if(!opt) opt = {'path':'guppy_loc_m_e1_0'};
+        if (box.path == "all") {
+            if (!opt) opt = {
+                'path': 'guppy_loc_m_e1_0'
+            };
             continue;
         }
         var xdist = Math.max(box.left - x, x - box.right, 0)
         var ydist = Math.max(box.top - y, y - box.bottom, 0)
-        var dist = Math.sqrt(xdist*xdist + ydist*ydist);
-        if(min_dist == -1 || dist < min_dist){
+        var dist = Math.sqrt(xdist * xdist + ydist * ydist);
+        if (min_dist == -1 || dist < min_dist) {
             min_dist = dist;
             mid_dist = x - box.mid_x;
             opt = box;
         }
     }
     loc = opt.path.substring("guppy_loc".length);
-    loc = loc.replace(/_/g,"/");
-    loc = loc.replace(/([0-9]+)(?=.*?\/)/g,"[$1]");
-    cur = g.engine.doc.xpath_node(loc.substring(0,loc.lastIndexOf("/")), g.engine.doc.root());
-    car = parseInt(loc.substring(loc.lastIndexOf("/")+1));
+    loc = loc.replace(/_/g, "/");
+    loc = loc.replace(/([0-9]+)(?=.*?\/)/g, "[$1]");
+    cur = g.engine.doc.xpath_node(loc.substring(0, loc.lastIndexOf("/")), g.engine.doc.root());
+    car = parseInt(loc.substring(loc.lastIndexOf("/") + 1));
     // Check if we want the cursor before or after the element
-    if(mid_dist > 0 && !(opt.blank)){
+    if (mid_dist > 0 && !(opt.blank)) {
         car++;
     }
-    var ans = {"current":cur,"caret":car,"pos":pos};
-    if(current_node && opt){
-        var opt_pos = parseInt(opt.path.substring(opt.path.lastIndexOf("e")+1,opt.path.lastIndexOf("_")));
-        if(opt_pos < current_pos) pos = "left";
-        else if(opt_pos > current_pos) pos = "right";
-        else if(car < current_caret) pos = "left";
-        else if(car > current_caret) pos = "right";
-        if(pos) ans['pos'] = pos;
+    var ans = {
+        "current": cur,
+        "caret": car,
+        "pos": pos
+    };
+    if (current_node && opt) {
+        var opt_pos = parseInt(opt.path.substring(opt.path.lastIndexOf("e") + 1, opt.path.lastIndexOf("_")));
+        if (opt_pos < current_pos) pos = "left";
+        else if (opt_pos > current_pos) pos = "right";
+        else if (car < current_caret) pos = "left";
+        else if (car > current_caret) pos = "right";
+        if (pos) ans['pos'] = pos;
         else ans['pos'] = "none";
     }
     return ans;
 }
 
-Guppy.mouse_up = function(){
+Guppy.mouse_up = function () {
     Guppy.kb.is_mouse_down = false;
     var g = Guppy.active_guppy;
-    if(g) g.render(true);
+    if (g) g.render(true);
 }
 
-Guppy.mouse_down = function(e){
-    if(e.target.getAttribute("class") == "guppy-button") return;
+Guppy.mouse_down = function (e) {
+    if (e.target.getAttribute("class") == "guppy-button") return;
     var n = e.target;
     Guppy.kb.is_mouse_down = true;
-    while(n != null){
-        if(n.id in Guppy.instances){
+    while (n != null) {
+        if (n.id in Guppy.instances) {
             e.preventDefault();
             var prev_active = Guppy.active_guppy;
-            for(var i in Guppy.instances){
-                if(i != n.id) Guppy.instances[i].deactivate();
+            for (var i in Guppy.instances) {
+                if (i != n.id) Guppy.instances[i].deactivate();
                 Guppy.active_guppy = Guppy.instances[n.id];
                 Guppy.active_guppy.activate();
             }
             var g = Guppy.active_guppy;
             var b = Guppy.active_guppy.engine;
             g.space_caret = 0;
-            if(prev_active == g){
-                if(e.shiftKey){
+            if (prev_active == g) {
+                if (e.shiftKey) {
                     g.select_to(e.clientX, e.clientY, true);
-                }
-                else {
-                    var loc = Guppy.get_loc(e.clientX,e.clientY);
-                    if(!loc) return;
+                } else {
+                    var loc = Guppy.get_loc(e.clientX, e.clientY);
+                    if (!loc) return;
                     b.current = loc.current;
                     b.caret = loc.caret;
                     b.sel_status = Engine.SEL_NONE;
@@ -2484,76 +2651,91 @@ Guppy.mouse_down = function(e){
             }
             return;
         }
-        if(n.classList && n.classList.contains("guppy_osk")){
+        if (n.classList && n.classList.contains("guppy_osk")) {
             return;
         }
         n = n.parentNode;
     }
     Guppy.active_guppy = null;
-    for(var j in Guppy.instances){
+    for (var j in Guppy.instances) {
         Guppy.instances[j].deactivate();
     }
 }
 
-Guppy.mouse_move = function(e){
+Guppy.mouse_move = function (e) {
     var g = Guppy.active_guppy;
-    if(!g) return;
-    if(!Guppy.kb.is_mouse_down){
+    if (!g) return;
+    if (!Guppy.kb.is_mouse_down) {
         var bb = g.editor;
         var rect = bb.getBoundingClientRect();
-        if((e.clientX < rect.left || e.clientX > rect.right) || (e.clientY > rect.bottom || e.clientY < rect.top)){
-            g.temp_cursor = {"node":null,"caret":0};
-        }
-        else{
-            var loc = Guppy.get_loc(e.clientX,e.clientY);
-            if(!loc) return;
-            g.temp_cursor = {"node":loc.current,"caret":loc.caret};
+        if ((e.clientX < rect.left || e.clientX > rect.right) || (e.clientY > rect.bottom || e.clientY < rect.top)) {
+            g.temp_cursor = {
+                "node": null,
+                "caret": 0
+            };
+        } else {
+            var loc = Guppy.get_loc(e.clientX, e.clientY);
+            if (!loc) return;
+            g.temp_cursor = {
+                "node": loc.current,
+                "caret": loc.caret
+            };
         }
         g.render(g.is_changed());
-    }
-    else{
-        g.select_to(e.clientX,e.clientY, true);
+    } else {
+        g.select_to(e.clientX, e.clientY, true);
         g.render(g.is_changed());
     }
 }
 
-Guppy.prototype.select_to = function(x, y, mouse){
+Guppy.prototype.select_to = function (x, y, mouse) {
     var sel_caret = this.engine.caret;
     var sel_cursor = this.engine.current;
-    if(this.engine.sel_status == Engine.SEL_CURSOR_AT_START){
+    if (this.engine.sel_status == Engine.SEL_CURSOR_AT_START) {
         sel_cursor = this.engine.sel_end.node;
         sel_caret = this.engine.sel_end.caret;
-    }
-    else if(this.engine.sel_status == Engine.SEL_CURSOR_AT_END){
+    } else if (this.engine.sel_status == Engine.SEL_CURSOR_AT_END) {
         sel_cursor = this.engine.sel_start.node;
         sel_caret = this.engine.sel_start.caret;
     }
-    var loc = Guppy.get_loc(x,y,sel_cursor,sel_caret);
-    if(!loc) return;
+    var loc = Guppy.get_loc(x, y, sel_cursor, sel_caret);
+    if (!loc) return;
     this.engine.select_to(loc, sel_cursor, sel_caret, mouse);
 }
 
 
-window.addEventListener("mousedown",Guppy.mouse_down, true);
-window.addEventListener("mouseup",Guppy.mouse_up, true);
-window.addEventListener("mousemove",Guppy.mouse_move, false);
+window.addEventListener("mousedown", Guppy.mouse_down, true);
+window.addEventListener("mouseup", Guppy.mouse_up, true);
+window.addEventListener("mousemove", Guppy.mouse_move, false);
 
-Guppy.prototype.render_node = function(t){
+var scrolling = false;
+window.addEventListener("touchstart", function () {
+  scrolling = false;
+}, true);
+window.addEventListener("touchmove", function () {
+  scrolling = true;
+}, true);
+window.addEventListener("touchend", function (e) {
+  if (!scrolling) {
+    f.mouse_down(e);
+  }
+}, true);
+
+Guppy.prototype.render_node = function (t) {
     // All the interesting work is done by transform.  This function just adds in the cursor and selection-start cursor
     var output = "";
-    if(t == "render"){
+    if (t == "render") {
         var root = this.engine.doc.root();
-        this.engine.add_paths(root,"m");
+        this.engine.add_paths(root, "m");
         this.engine.temp_cursor = this.temp_cursor;
         this.engine.add_classes_cursors(root);
-        this.engine.current.setAttribute("current","yes");
-        if(this.temp_cursor.node) this.temp_cursor.node.setAttribute("temp","yes");
-        output = this.engine.get_content("latex",true);
+        this.engine.current.setAttribute("current", "yes");
+        if (this.temp_cursor.node) this.temp_cursor.node.setAttribute("temp", "yes");
+        output = this.engine.get_content("latex", true);
         this.engine.remove_cursors_classes(root);
-        output = output.replace(new RegExp('&amp;','g'), '&');
+        output = output.replace(new RegExp('&amp;', 'g'), '&');
         return output;
-    }
-    else{
+    } else {
         output = this.engine.get_content(t);
     }
     return output
@@ -2566,16 +2748,16 @@ Guppy.prototype.render_node = function(t){
     changes to the document (i.e. that affect the positions of
     elements)
 */
-Guppy.prototype.render = function(updated){
-    if(!this.editor_active && this.engine.doc.is_blank()){
-        katex.render(this.engine.setting("empty_content"),this.editor);
+Guppy.prototype.render = function (updated) {
+    if (!this.editor_active && this.engine.doc.is_blank()) {
+        katex.render(this.engine.setting("empty_content"), this.editor);
         this.editor.appendChild(this.buttons_div);
         return;
     }
     var tex = this.render_node("render");
-    katex.render(tex,this.editor);
+    katex.render(tex, this.editor);
     this.editor.appendChild(this.buttons_div);
-    if(updated){
+    if (updated) {
         this.recompute_locations_paths();
     }
 }
@@ -2584,7 +2766,7 @@ Guppy.prototype.render = function(updated){
     Get the content of the editor as LaTeX
     @memberof Guppy
 */
-Guppy.prototype.latex = function(){
+Guppy.prototype.latex = function () {
     return this.engine.get_content("latex");
 }
 
@@ -2592,7 +2774,7 @@ Guppy.prototype.latex = function(){
     Get the content of the editor as XML
     @memberof Guppy
 */
-Guppy.prototype.xml = function(){
+Guppy.prototype.xml = function () {
     return this.engine.get_content("xml");
 }
 
@@ -2600,7 +2782,7 @@ Guppy.prototype.xml = function(){
     Get the content of the editor as a syntax tree, serialised using JSON
     @memberof Guppy
 */
-Guppy.prototype.syntax_tree = function(){
+Guppy.prototype.syntax_tree = function () {
     return this.engine.get_content("ast");
 }
 
@@ -2609,7 +2791,7 @@ Guppy.prototype.syntax_tree = function(){
     using JSON.  For example, `x < y = z` will be returned as `[["<", [["var", "x"], ["var", "y"]]],["=", [["var", "y"], ["var", "z"]]]]
     @memberof Guppy
 */
-Guppy.prototype.equations = function(){
+Guppy.prototype.equations = function () {
     return this.engine.get_content("eqns");
 }
 
@@ -2617,7 +2799,7 @@ Guppy.prototype.equations = function(){
     Get the content of the editor in a parseable text format.
     @memberof Guppy
 */
-Guppy.prototype.text = function(){
+Guppy.prototype.text = function () {
     return this.engine.get_content("text");
 }
 
@@ -2626,7 +2808,7 @@ Guppy.prototype.text = function(){
     Get the content of the editor in AsciiMath.
     @memberof Guppy
 */
-Guppy.prototype.asciimath = function(){
+Guppy.prototype.asciimath = function () {
     return this.engine.get_content("asciimath");
 }
 
@@ -2634,7 +2816,7 @@ Guppy.prototype.asciimath = function(){
     Get the Doc object representing the editor's contents.
     @memberof Guppy
 */
-Guppy.prototype.doc = function(){
+Guppy.prototype.doc = function () {
     return this.engine.doc;
 }
 
@@ -2659,7 +2841,7 @@ Guppy.prototype.doc = function(){
     is a list of the variables that appear in the expression.
     @memberof Guppy
 */
-Guppy.prototype.func = function(evaluators){
+Guppy.prototype.func = function (evaluators) {
     var res = this.engine.get_content("function", evaluators);
     var f = res['function'];
     f.vars = res.vars;
@@ -2678,7 +2860,7 @@ Guppy.prototype.func = function(evaluators){
     in the syntax tree returns.
     @memberof Guppy
 */
-Guppy.prototype.evaluate = function(evaluators){
+Guppy.prototype.evaluate = function (evaluators) {
     return this.engine.doc.evaluate(evaluators);
 }
 
@@ -2692,7 +2874,7 @@ Guppy.prototype.evaluate = function(evaluators){
     document will be returned.
     @memberof Guppy
 */
-Guppy.prototype.symbols_used = function(groups){
+Guppy.prototype.symbols_used = function (groups) {
     return this.engine.doc.get_symbols(groups);
 }
 
@@ -2700,7 +2882,7 @@ Guppy.prototype.symbols_used = function(groups){
     Get a list of the variable names used in the document.
     @memberof Guppy
 */
-Guppy.prototype.vars = function(){
+Guppy.prototype.vars = function () {
     return this.engine.get_content("function").vars;
 }
 
@@ -2709,7 +2891,7 @@ Guppy.prototype.vars = function(){
     @param {String} text - A string representing the document to import.
     @memberof Guppy
 */
-Guppy.prototype.import_text = function(text){
+Guppy.prototype.import_text = function (text) {
     return this.engine.import_text(text);
 }
 
@@ -2721,7 +2903,7 @@ Guppy.prototype.import_text = function(text){
     @param {String} text - A string representing the document to import.
     @memberof Guppy
 */
-Guppy.prototype.import_latex = function(text){
+Guppy.prototype.import_latex = function (text) {
     return this.engine.import_latex(text);
 }
 
@@ -2732,7 +2914,7 @@ Guppy.prototype.import_latex = function(text){
     import.
     @memberof Guppy
 */
-Guppy.prototype.import_xml = function(xml){
+Guppy.prototype.import_xml = function (xml) {
     return this.engine.set_content(xml);
 }
 
@@ -2741,7 +2923,7 @@ Guppy.prototype.import_xml = function(xml){
     @param {Object} tree - A JSON object representing the syntax tree to import.
     @memberof Guppy
 */
-Guppy.prototype.import_syntax_tree = function(tree){
+Guppy.prototype.import_syntax_tree = function (tree) {
     return this.engine.import_ast(tree);
 }
 
@@ -2749,14 +2931,16 @@ Guppy.prototype.import_syntax_tree = function(tree){
     Focus this instance of the editor
     @memberof Guppy
 */
-Guppy.prototype.activate = function(){
+Guppy.prototype.activate = function () {
     Guppy.active_guppy = this;
     this.editor_active = true;
-    this.editor.className = this.editor.className.replace(new RegExp('(\\s|^)guppy_inactive(\\s|$)'),' guppy_active ');
+    this.editor.className = this.editor.className.replace(new RegExp('(\\s|^)guppy_inactive(\\s|$)'), ' guppy_active ');
     this.editor.focus();
-    if(this.ready){
+    if (this.ready) {
         this.render(true);
-        this.engine.fire_event("focus",{"focused":true});
+        this.engine.fire_event("focus", {
+            "focused": true
+        });
     }
 }
 
@@ -2764,22 +2948,23 @@ Guppy.prototype.activate = function(){
     Unfocus this instance of the editor
     @memberof Guppy
 */
-Guppy.prototype.deactivate = function(){
+Guppy.prototype.deactivate = function () {
     this.editor_active = false;
     var r1 = new RegExp('(?:\\s|^)guppy_active(?:\\s|$)');
     var r2 = new RegExp('(?:\\s|^)guppy_inactive(?:\\s|$)');
-    if(this.editor.className.match(r1)){
-        this.editor.className = this.editor.className.replace(r1,' guppy_inactive ');
-    }
-    else if(!this.editor.className.match(r2)){
+    if (this.editor.className.match(r1)) {
+        this.editor.className = this.editor.className.replace(r1, ' guppy_inactive ');
+    } else if (!this.editor.className.match(r2)) {
         this.editor.className += ' guppy_inactive ';
     }
     Guppy.kb.shift_down = false;
     Guppy.kb.ctrl_down = false;
     Guppy.kb.alt_down = false;
-    if(this.ready){
+    if (this.ready) {
         this.render();
-        this.engine.fire_event("focus",{"focused":false});
+        this.engine.fire_event("focus", {
+            "focused": false
+        });
     }
 }
 
@@ -2794,72 +2979,72 @@ Guppy.kb.is_mouse_down = false;
 
 // keys aside from 0-9,a-z,A-Z
 Guppy.kb.k_chars = {
-    "+":"+",
-    "-":"-",
-    "*":"*",
-    ".":"."
+    "+": "+",
+    "-": "-",
+    "*": "*",
+    ".": "."
 };
 Guppy.kb.k_text = {
-    "/":"/",
-    "*":"*",
-    "(":"(",
-    ")":")",
-    "<":"<",
-    ">":">",
-    "|":"|",
-    "!":"!",
-    ",":",",
-    ".":".",
-    ";":";",
-    "=":"=",
-    "[":"[",
-    "]":"]",
-    "@":"@",
-    "'":"'",
-    "`":"`",
-    ":":":",
-    "\"":"\"",
-    "?":"?",
-    "space":" ",
+    "/": "/",
+    "*": "*",
+    "(": "(",
+    ")": ")",
+    "<": "<",
+    ">": ">",
+    "|": "|",
+    "!": "!",
+    ",": ",",
+    ".": ".",
+    ";": ";",
+    "=": "=",
+    "[": "[",
+    "]": "]",
+    "@": "@",
+    "'": "'",
+    "`": "`",
+    ":": ":",
+    "\"": "\"",
+    "?": "?",
+    "space": " ",
 };
 Guppy.kb.k_controls = {
-    "up":"up",
-    "down":"down",
-    "right":"right",
-    "left":"left",
-    "alt+k":"up",
-    "alt+j":"down",
-    "alt+l":"right",
-    "alt+h":"left",
-    "space":"spacebar",
-    "home":"home",
-    "end":"end",
-    "backspace":"backspace",
-    "del":"delete_key",
-    "mod+a":"sel_all",
-    "mod+c":"sel_copy",
-    "mod+x":"sel_cut",
-    "mod+v":"sel_paste",
-    "mod+z":"undo",
-    "mod+y":"redo",
-    "enter":"done",
-    "mod+shift+right":"list_extend_copy_right",
-    "mod+shift+left":"list_extend_copy_left",
-    ",":"list_extend_right",
-    ";":"list_extend_down",
-    "mod+right":"list_extend_right",
-    "mod+left":"list_extend_left",
-    "mod+up":"list_extend_up",
-    "mod+down":"list_extend_down",
-    "mod+shift+up":"list_extend_copy_up",
-    "mod+shift+down":"list_extend_copy_down",
-    "mod+backspace":"list_remove",
-    "mod+shift+backspace":"list_remove_row",
-    "shift+left":"sel_left",
-    "shift+right":"sel_right",
-    ")":"right_paren",
-    "\\":"backslash",
-    "tab":"tab"
+    "up": "up",
+    "down": "down",
+    "right": "right",
+    "left": "left",
+    "alt+k": "up",
+    "alt+j": "down",
+    "alt+l": "right",
+    "alt+h": "left",
+    "space": "spacebar",
+    "home": "home",
+    "end": "end",
+    "backspace": "backspace",
+    "del": "delete_key",
+    "mod+a": "sel_all",
+    "mod+c": "sel_copy",
+    "mod+x": "sel_cut",
+    "mod+v": "sel_paste",
+    "mod+z": "undo",
+    "mod+y": "redo",
+    "enter": "done",
+    "mod+shift+right": "list_extend_copy_right",
+    "mod+shift+left": "list_extend_copy_left",
+    ",": "list_extend_right",
+    ";": "list_extend_down",
+    "mod+right": "list_extend_right",
+    "mod+left": "list_extend_left",
+    "mod+up": "list_extend_up",
+    "mod+down": "list_extend_down",
+    "mod+shift+up": "list_extend_copy_up",
+    "mod+shift+down": "list_extend_copy_down",
+    "mod+backspace": "list_remove",
+    "mod+shift+backspace": "list_remove_row",
+    "shift+left": "sel_left",
+    "shift+right": "sel_right",
+    ")": "right_paren",
+    "\\": "backslash",
+    "tab": "tab"
 };
 
 // Will populate keyboard shortcuts for symbols from symbol files
@@ -2869,103 +3054,115 @@ var i = 0;
 
 // letters
 
-for(i = 65; i <= 90; i++){
+for (i = 65; i <= 90; i++) {
     Guppy.kb.k_chars[String.fromCharCode(i).toLowerCase()] = String.fromCharCode(i).toLowerCase();
-    Guppy.kb.k_chars['shift+'+String.fromCharCode(i).toLowerCase()] = String.fromCharCode(i).toUpperCase();
+    Guppy.kb.k_chars['shift+' + String.fromCharCode(i).toLowerCase()] = String.fromCharCode(i).toUpperCase();
 }
 
 // numbers
 
-for(i = 48; i <= 57; i++)
+for (i = 48; i <= 57; i++)
     Guppy.kb.k_chars[String.fromCharCode(i)] = String.fromCharCode(i);
 
-Guppy.register_keyboard_handlers = function(){
-    Mousetrap.addKeycodes({173: '-'}); // Firefox's special minus (needed for _ = sub binding)
+Guppy.register_keyboard_handlers = function () {
+    Mousetrap.addKeycodes({
+        173: '-'
+    }); // Firefox's special minus (needed for _ = sub binding)
     var i, name;
     // Pull symbol shortcuts from Symbols:
-    for(name in Symbols.symbols){
-	var s = Symbols.symbols[name];
-	if(s.keys)
-                for(i = 0; i < s.keys.length; i++)
+    for (name in Symbols.symbols) {
+        var s = Symbols.symbols[name];
+        if (s.keys)
+            for (i = 0; i < s.keys.length; i++)
                 Guppy.kb.k_syms[s.keys[i]] = s.attrs.type;
     }
-    for(i in Guppy.kb.k_chars)
-        Mousetrap.bind(i,function(i){ return function(){
-            if(!Guppy.active_guppy) return true;
-            Guppy.active_guppy.temp_cursor.node = null;
-            if(Utils.is_text(Guppy.active_guppy.engine.current) && Guppy.kb.k_text[i]){
-                Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
-            }
-            else{
-                Guppy.active_guppy.engine.insert_string(Guppy.kb.k_chars[i]);
-            }
-            Guppy.active_guppy.render(true);
-            return false;
-        }}(i));
-    for(i in Guppy.kb.k_syms)
-        Mousetrap.bind(i,function(i){ return function(){
-            if(!Guppy.active_guppy) return true;
-            Guppy.active_guppy.temp_cursor.node = null;
-            // We always want to skip using this symbol insertion if
-            // we are in text mode, and additionally we want only to
-            // insert the corresponding text if there is an overriding
-            // text representation in Guppy.kb.k_text
-            if(Utils.is_text(Guppy.active_guppy.engine.current)){
-                if(Guppy.kb.k_text[i]) Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
-            }
-            else{
-                Guppy.active_guppy.engine.space_caret = 0;
-                //Guppy.active_guppy.engine.insert_symbol(Guppy.kb.k_syms[i]);
-                Guppy.active_guppy.engine.insert_symbol(Symbols.lookup_type(Guppy.kb.k_syms[i]));
-            }
-            Guppy.active_guppy.render(true);
-            return false;
-        }}(i));
-    for(i in Guppy.kb.k_controls)
-        Mousetrap.bind(i,function(i){ return function(){
-            if(!Guppy.active_guppy) return true;
-            // We want to skip using this control sequence only if there is an overriding text representation in Guppy.kb.k_text
-            if(Utils.is_text(Guppy.active_guppy.engine.current) && Guppy.kb.k_text[i]){
-                Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
-            }
-            else{
-                Guppy.active_guppy.engine.space_caret = 0;
-                Guppy.active_guppy.engine[Guppy.kb.k_controls[i]]();
+    for (i in Guppy.kb.k_chars)
+        Mousetrap.bind(i, function (i) {
+            return function () {
+                if (!Guppy.active_guppy) return true;
                 Guppy.active_guppy.temp_cursor.node = null;
-            }
-            Guppy.active_guppy.render(["up","down","right","left","home","end","sel_left","sel_right"].indexOf(i) < 0);
-            //Guppy.active_guppy.render(false);
-            return false;
-        }}(i));
-    for(i in Guppy.kb.k_text)
-        if(!(Guppy.kb.k_chars[i] || Guppy.kb.k_syms[i] || Guppy.kb.k_controls[i])){
-            Mousetrap.bind(i,function(i){ return function(){
-                if(!Guppy.active_guppy) return true;
-                Guppy.active_guppy.temp_cursor.node = null;
-                if(Utils.is_text(Guppy.active_guppy.engine.current)){
+                if (Utils.is_text(Guppy.active_guppy.engine.current) && Guppy.kb.k_text[i]) {
                     Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
-                    Guppy.active_guppy.render(true);
+                } else {
+                    Guppy.active_guppy.engine.insert_string(Guppy.kb.k_chars[i]);
                 }
+                Guppy.active_guppy.render(true);
                 return false;
-            }}(i));
+            }
+        }(i));
+    for (i in Guppy.kb.k_syms)
+        Mousetrap.bind(i, function (i) {
+            return function () {
+                if (!Guppy.active_guppy) return true;
+                Guppy.active_guppy.temp_cursor.node = null;
+                // We always want to skip using this symbol insertion if
+                // we are in text mode, and additionally we want only to
+                // insert the corresponding text if there is an overriding
+                // text representation in Guppy.kb.k_text
+                if (Utils.is_text(Guppy.active_guppy.engine.current)) {
+                    if (Guppy.kb.k_text[i]) Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
+                } else {
+                    Guppy.active_guppy.engine.space_caret = 0;
+                    //Guppy.active_guppy.engine.insert_symbol(Guppy.kb.k_syms[i]);
+                    Guppy.active_guppy.engine.insert_symbol(Symbols.lookup_type(Guppy.kb.k_syms[i]));
+                }
+                Guppy.active_guppy.render(true);
+                return false;
+            }
+        }(i));
+    for (i in Guppy.kb.k_controls)
+        Mousetrap.bind(i, function (i) {
+            return function () {
+                if (!Guppy.active_guppy) return true;
+                // We want to skip using this control sequence only if there is an overriding text representation in Guppy.kb.k_text
+                if (Utils.is_text(Guppy.active_guppy.engine.current) && Guppy.kb.k_text[i]) {
+                    Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
+                } else {
+                    Guppy.active_guppy.engine.space_caret = 0;
+                    Guppy.active_guppy.engine[Guppy.kb.k_controls[i]]();
+                    Guppy.active_guppy.temp_cursor.node = null;
+                }
+                Guppy.active_guppy.render(["up", "down", "right", "left", "home", "end", "sel_left", "sel_right"].indexOf(i) < 0);
+                //Guppy.active_guppy.render(false);
+                return false;
+            }
+        }(i));
+    for (i in Guppy.kb.k_text)
+        if (!(Guppy.kb.k_chars[i] || Guppy.kb.k_syms[i] || Guppy.kb.k_controls[i])) {
+            Mousetrap.bind(i, function (i) {
+                return function () {
+                    if (!Guppy.active_guppy) return true;
+                    Guppy.active_guppy.temp_cursor.node = null;
+                    if (Utils.is_text(Guppy.active_guppy.engine.current)) {
+                        Guppy.active_guppy.engine.insert_string(Guppy.kb.k_text[i]);
+                        Guppy.active_guppy.render(true);
+                    }
+                    return false;
+                }
+            }(i));
         }
 }
 
 module.exports = Guppy;
-
 },{"../lib/katex/katex-modified.min.js":1,"../lib/mousetrap/mousetrap.min.js":2,"./doc.js":4,"./engine.js":5,"./settings.js":8,"./symbols.js":9,"./utils.js":10}],7:[function(require,module,exports){
-var Parser = function(token_types){
+var Parser = function (token_types) {
     var self = this;
     this.token_types = token_types;
     this.symbol_table = {};
 
     this.original_symbol = {
-        nud: function () { throw Error("Undefined"); },
-        led: function () { throw Error("Missing operator"); }
+        nud: function () {
+            throw Error("Undefined");
+        },
+        led: function () {
+            throw Error("Missing operator");
+        }
     };
 
-    this.mul = function(left){ return ["*", [left, this.nud()]]; };
-    
+    this.mul = function (left) {
+        return ["*", [left, this.nud()]];
+    };
+
     this.symbol = function (id, bp) {
         var s = self.symbol_table[id];
         bp = bp || 0;
@@ -2982,7 +3179,7 @@ var Parser = function(token_types){
         }
         return s;
     };
-    
+
     this.advance = function (id) {
         var a, o, t, v;
         if (id && this.token.id !== id) {
@@ -3016,12 +3213,12 @@ var Parser = function(token_types){
             o = this.symbol_table["(function)"];
             args = t.args;
         } else {
-            throw Error("Unexpected token",t);
+            throw Error("Unexpected token", t);
         }
         self.token = Object.create(o);
         self.token.type = a;
         self.token.value = v;
-        if(args) self.token.args = args;
+        if (args) self.token.args = args;
         return self.token;
     };
 
@@ -3045,7 +3242,7 @@ var Parser = function(token_types){
         };
         return s;
     };
-    
+
     this.prefix = function (id, nud) {
         var s = self.symbol(id);
         s.nud = nud || function () {
@@ -3056,29 +3253,39 @@ var Parser = function(token_types){
 
     this.symbol("(end)");
     var s = null;
-    
+
     s = this.symbol("(blank)", 60);
-    s.nud = function(){ return ["blank"];};
+    s.nud = function () {
+        return ["blank"];
+    };
 
     s = this.symbol("(function)", 60);
     s.led = this.mul;
-    s.nud = function(){ return [this.value, this.args || []];};
-    
+    s.nud = function () {
+        return [this.value, this.args || []];
+    };
+
     s = this.symbol("(literal)", 60);
     s.led = this.mul;
-    s.nud = function(){ return ["val", [this.value]] };
+    s.nud = function () {
+        return ["val", [this.value]]
+    };
 
     s = this.symbol("(pass)", 60);
     s.led = this.mul;
-    s.nud = function(){ return this.args[0] };
-    
+    s.nud = function () {
+        return this.args[0]
+    };
+
     s = this.symbol("(var)", 60);
     s.led = this.mul;
-    s.nud = function(){ return ["var", [this.value]] };
-        
+    s.nud = function () {
+        return ["var", [this.value]]
+    };
+
     this.token_nr = 0;
     this.tokens = [];
-    
+
     this.infix("=", 40);
     this.infix("!=", 40);
     this.infix("<", 40);
@@ -3089,85 +3296,162 @@ var Parser = function(token_types){
     this.infix("-", 50);
     this.infix("*", 60);
     this.infix("/", 60);
-    this.infix("!", 70, function(left){ return ["factorial", [left]]; });
-    this.infix("^", 70, function(left){ return ["exponential", [left, self.expression(70)]]; });
-    this.infix("_", 70, function(left){ return ["subscript", [left, self.expression(70)]]; });
+    this.infix("!", 70, function (left) {
+        return ["factorial", [left]];
+    });
+    this.infix("^", 70, function (left) {
+        return ["exponential", [left, self.expression(70)]];
+    });
+    this.infix("_", 70, function (left) {
+        return ["subscript", [left, self.expression(70)]];
+    });
     this.infix("(", 80, self.mul);
-    this.symbol("(").nud = function(){ var ans = self.expression(0); self.advance(")"); return ans; }
+    this.symbol("(").nud = function () {
+        var ans = self.expression(0);
+        self.advance(")");
+        return ans;
+    }
     this.symbol(")");
-    this.symbol("{").nud = function(){ var ans = self.expression(0); self.advance("}"); return ans; }
+    this.symbol("{").nud = function () {
+        var ans = self.expression(0);
+        self.advance("}");
+        return ans;
+    }
     this.symbol("}");
     this.symbol(",");
     this.prefix("-");
 
-    this.tokenise_and_parse = function(str){
+    this.tokenise_and_parse = function (str) {
         return this.parse(this.tokenise(str));
     }
-    
-    this.parse = function(tokens){
+
+    this.parse = function (tokens) {
         this.tokens = tokens;
         this.token_nr = 0;
-        if(this.tokens.length == 0) return ["blank"];
+        if (this.tokens.length == 0) return ["blank"];
         this.advance();
         return this.expression(10);
     }
 }
 
-Parser.prototype.tokenise = function(text){
+Parser.prototype.tokenise = function (text) {
     var ans = [];
-    while(text.length > 0){
+    while (text.length > 0) {
         var ok = false;
-        for(var i = 0; i < this.token_types.length; i++){
+        for (var i = 0; i < this.token_types.length; i++) {
             var t = this.token_types[i];
             var re = RegExp(t.re);
             var m = re.exec(text);
-            if(m){
+            if (m) {
                 m = m[0];
                 text = text.substring(m.length);
                 ok = true;
-                if(t.type != "space") ans.push({"type":t.type, "value": t.value(m)})
+                if (t.type != "space") ans.push({
+                    "type": t.type,
+                    "value": t.value(m)
+                })
                 break;
             }
         }
-        if(!ok){
+        if (!ok) {
             return [];
         }
     }
     return ans;
 }
 
-var EParser = new Parser([
-    {"type":"number", "re":"^[0-9.]+", "value":function(m){
-        if(isNaN(Number(m))) throw Error("Invalid number: "+m);
-        return Number(m);
-    }},
-    {"type":"operator", "re":"^(<=|>=|!=|>|<|=)", "value":function(m){return m}},
-    {"type":"operator", "re":"^[-+*/!]", "value":function(m){return m}},
-    {"type":"name", "re":"^[a-zA-Z]", "value":function(m){return m}},
-    {"type":"space", "re":"^\\s+", "value":function(m){return m}}
+var EParser = new Parser([{
+        "type": "number",
+        "re": "^[0-9.]+",
+        "value": function (m) {
+            if (isNaN(Number(m))) throw Error("Invalid number: " + m);
+            return Number(m);
+        }
+    },
+    {
+        "type": "operator",
+        "re": "^(<=|>=|!=|>|<|=)",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "operator",
+        "re": "^[-+*/!]",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "name",
+        "re": "^[a-zA-Z]",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "space",
+        "re": "^\\s+",
+        "value": function (m) {
+            return m
+        }
+    }
 ]);
 
-var TextParser = new Parser([
-    {"type":"number", "re":"^[0-9.]+", "value":function(m){
-        if(isNaN(Number(m))) throw Error("Invalid number: "+m);
-        return Number(m);
-    }},
-    {"type":"operator", "re":"^(!=|>=|<=)", "value":function(m){return m;}},
-    {"type":"operator", "re":"^[-+*/,!()=<>_^]", "value":function(m){return m}},
-    {"type":"name", "re":"^[a-zA-Z_]*[a-zA-Z]", "value":function(m){return m}},
-    {"type":"comma", "re":"^,", "value":function(m){return m}},
-    {"type":"space", "re":"^\\s+", "value":function(m){return m}}
+var TextParser = new Parser([{
+        "type": "number",
+        "re": "^[0-9.]+",
+        "value": function (m) {
+            if (isNaN(Number(m))) throw Error("Invalid number: " + m);
+            return Number(m);
+        }
+    },
+    {
+        "type": "operator",
+        "re": "^(!=|>=|<=)",
+        "value": function (m) {
+            return m;
+        }
+    },
+    {
+        "type": "operator",
+        "re": "^[-+*/,!()=<>_^]",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "name",
+        "re": "^[a-zA-Z_]*[a-zA-Z]",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "comma",
+        "re": "^,",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "space",
+        "re": "^\\s+",
+        "value": function (m) {
+            return m
+        }
+    }
 ]);
 
 
 var s = TextParser.symbol("(var)", 60);
 s.led = TextParser.mul;
-s.nud = function(){
-    if(this.parent.token.id == "("){
+s.nud = function () {
+    if (this.parent.token.id == "(") {
         var args = [];
         TextParser.advance()
-        if(this.parent.token.id !== ")"){
-            while(true){
+        if (this.parent.token.id !== ")") {
+            while (true) {
                 args.push(TextParser.expression(0));
                 if (this.parent.token.id !== ",") {
                     break;
@@ -3177,46 +3461,78 @@ s.nud = function(){
         }
         TextParser.advance(")");
         return [this.value, args];
-    }
-    else{
+    } else {
         return ["var", [this.value]]
     }
 };
 
-var LaTeXParser = new Parser([
-    {"type":"number", "re":"^[0-9.]+", "value":function(m){
-        if(isNaN(Number(m))) throw Error("Invalid number: "+m);
-        return Number(m);
-    }},
-    {"type":"operator", "re":"^(!=|>=|<=)", "value":function(m){return m;}},
-    {"type":"operator", "re":"^[-+*/,!()=<>_^}{]", "value":function(m){return m}},
-    {"type":"name", "re":"^[a-zA-Z_]*[a-zA-Z]", "value":function(m){return m}},
-    {"type":"name", "re":"^\\\\[a-zA-Z]*[a-zA-Z]", "value":function(m){return m.substring(1)}},
-    {"type":"space", "re":"^\\s+", "value":function(m){return m}}
+var LaTeXParser = new Parser([{
+        "type": "number",
+        "re": "^[0-9.]+",
+        "value": function (m) {
+            if (isNaN(Number(m))) throw Error("Invalid number: " + m);
+            return Number(m);
+        }
+    },
+    {
+        "type": "operator",
+        "re": "^(!=|>=|<=)",
+        "value": function (m) {
+            return m;
+        }
+    },
+    {
+        "type": "operator",
+        "re": "^[-+*/,!()=<>_^}{]",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "name",
+        "re": "^[a-zA-Z_]*[a-zA-Z]",
+        "value": function (m) {
+            return m
+        }
+    },
+    {
+        "type": "name",
+        "re": "^\\\\[a-zA-Z]*[a-zA-Z]",
+        "value": function (m) {
+            return m.substring(1)
+        }
+    },
+    {
+        "type": "space",
+        "re": "^\\s+",
+        "value": function (m) {
+            return m
+        }
+    }
 ]);
 
 s = LaTeXParser.symbol("(var)", 60);
 s.led = LaTeXParser.mul;
-s.nud = function(){
+s.nud = function () {
     var args = [];
-    
-    while(this.parent.token.id == "{"){
+
+    while (this.parent.token.id == "{") {
         LaTeXParser.advance()
-        if(this.parent.token.id !== "}"){
+        if (this.parent.token.id !== "}") {
             args.push(LaTeXParser.expression(0));
             LaTeXParser.advance("}");
         }
     }
-    if(args.length > 0) return [this.value, args];
+    if (args.length > 0) return [this.value, args];
     else return ["var", [this.value]]
 };
 
-module.exports = {"Parser":Parser,
-                  "TextParser":TextParser,
-                  "LaTeXParser":LaTeXParser,
-                  "EParser": EParser};
-
-
+module.exports = {
+    "Parser": Parser,
+    "TextParser": TextParser,
+    "LaTeXParser": LaTeXParser,
+    "EParser": EParser
+};
 },{}],8:[function(require,module,exports){
 var katex = require('../lib/katex/katex-modified.min.js');
 var Symbols = require('./symbols.js');
@@ -3240,21 +3556,21 @@ Settings.settings_options = {
 
 Settings.panels = {};
 Settings.panels.controls = document.createElement("div");
-Settings.panels.controls.setAttribute("class","guppy_help");
+Settings.panels.controls.setAttribute("class","guppy_help guppy");
 Settings.panels.controls.style = "padding:10px;border:1px solid black; background-color: #fff;position:absolute;top:0;left:0;display:none;";
 Settings.panels.controls.innerHTML = "<p>Start typing the name of a mathematical function to automatically insert it.  </p><p>(For example, \"sqrt\" for root, \"mat\" for matrix, or \"defi\" for definite integral.)</p>\n\
 <style>div.guppy_help td{ vertical-align:top;padding: 2px;}</style>\n\
 <h3>Controls</h3><table id=\"guppy_help_table\"><tr><td><b>Press...</b></td><td><b>...to do</b></td></tr></table>";
 
 Settings.panels.symbols = document.createElement("div");
-Settings.panels.symbols.setAttribute("class","guppy_help");
+Settings.panels.symbols.setAttribute("class","guppy_help guppy");
 Settings.panels.symbols.style = "padding:10px;border:1px solid black; background-color: #fff;position:absolute;top:0;left:0;display:none;";
 Settings.panels.symbols.innerHTML = "<p>Start typing the name of a mathematical function to automatically insert it.  </p><p>(For example, \"sqrt\" for root, \"mat\" for matrix, or \"defi\" for definite integral.)</p>\n\
 <style>div.guppy_help td{ vertical-align:top;padding: 2px;}</style>\n\
 <h3>Symbols</h3><table id=\"guppy_syms_table\"><tr><td><b>Type...</b></td><td><b>...to get</b></td></tr></table>";
 
 Settings.panels.settings = document.createElement("div");
-Settings.panels.settings.setAttribute("class","guppy_help");
+Settings.panels.settings.setAttribute("class","guppy_help guppy");
 Settings.panels.settings.style = "padding:10px;border:1px solid black; background-color: #fff;position:absolute;top:0;left:0;display:none;";
 Settings.panels.settings.innerHTML = "<p>Global settings: </p>\n\
 <style>div.guppy_help td{ vertical-align:top;padding: 2px;}</style>\n\
@@ -3334,7 +3650,7 @@ Settings.init = function(symbols){
         make_x(Settings.panels[Settings.div_names[i]]);
         document.body.appendChild(Settings.panels[Settings.div_names[i]])
     }
-    
+
     make_row("guppy_help_table","left/right arrows","Move cursor");
     make_row("guppy_help_table","shift+left/right arrows","Select region")
     make_row("guppy_help_table","ctrl+a","Select all");
@@ -3347,8 +3663,8 @@ Settings.init = function(symbols){
     make_row("guppy_help_table","ctrl+backspace","Delete current entry in list or column in matrix");
     make_row("guppy_help_table","ctrl+shift+backspace","Delete current row in matrix");
 
-    
-    
+
+
     for(var s in symbols){
         var latex = Symbols.add_blanks(symbols[s].output.latex, "\\blue{[?]}");
         var row = make_row("guppy_syms_table",s," ");
@@ -3360,207 +3676,225 @@ module.exports = Settings;
 
 },{"../lib/katex/katex-modified.min.js":1,"./symbols.js":9}],9:[function(require,module,exports){
 var Version = require('./version.js');
-var Symbols = {"symbols":{}, "templates":{}};
+var Symbols = {
+    "symbols": {},
+    "templates": {}
+};
 
-Symbols.make_template_symbol = function(template_name, name, args){
+Symbols.make_template_symbol = function (template_name, name, args) {
     var template = JSON.parse(JSON.stringify(Symbols.templates[template_name]));
     return Symbols.eval_template(template, name, args);
 }
 
-Symbols.eval_template = function(template, name, args){
+Symbols.eval_template = function (template, name, args) {
     args['name'] = name;
-    if(Object.prototype.toString.call(template) == "[object String]") {
+    if (Object.prototype.toString.call(template) == "[object String]") {
         var ans = template;
-        for(var nam in args) {
-            ans = ans.replace(new RegExp("\\{\\$"+nam+"\\}"),args[nam]);
+        for (var nam in args) {
+            ans = ans.replace(new RegExp("\\{\\$" + nam + "\\}"), args[nam]);
         }
         return ans;
-    }
-    else {
-        for(var x in template) {
+    } else {
+        for (var x in template) {
             template[x] = Symbols.eval_template(template[x], name, args)
         }
         return template;
     }
 }
 
-Symbols.lookup_type = function(type){
-    for(var s in Symbols.symbols){
-        if(Symbols.symbols[s].attrs.type == type) return s;
+Symbols.lookup_type = function (type) {
+    for (var s in Symbols.symbols) {
+        if (Symbols.symbols[s].attrs.type == type) return s;
     }
 }
 
-Symbols.add_symbols = function(syms){
+Symbols.add_symbols = function (syms) {
     var version = syms["_version"];
     var collection_name = syms["_name"];
     delete syms["_version"];
     delete syms["_name"];
-    if(!version || version != Version.SYMBOL_VERSION) Version.SYMBOL_ERROR(collection_name, version);
+    if (!version || version != Version.SYMBOL_VERSION) Version.SYMBOL_ERROR(collection_name, version);
     var templates = syms["_templates"];
-    if(templates){
-        for(var t in templates){
+    if (templates) {
+        for (var t in templates) {
             Symbols.templates[t] = templates[t];
         }
         delete syms["_templates"];
     }
-    for(var s in syms){
-        if(syms[s].template){
-            for(var v in syms[s].values){
+    for (var s in syms) {
+        if (syms[s].template) {
+            for (var v in syms[s].values) {
                 var name = null;
                 var args = null;
-                if(Object.prototype.toString.call(syms[s].values) == "[object Array]"){
+                if (Object.prototype.toString.call(syms[s].values) == "[object Array]") {
                     name = syms[s].values[v];
                     args = {}
-                }
-                else{
+                } else {
                     name = v;
                     args = syms[s].values[v];
                 }
                 Symbols.symbols[name] = Symbols.make_template_symbol(syms[s].template, name, args);
             }
-        }
-        else{
+        } else {
             Symbols.symbols[s] = syms[s];
         }
     }
 }
 
-Symbols.validate = function(){
-    for(var sym in Symbols.symbols){
-	if(!Symbols.symbols[sym].output.latex) throw "Symbol " + sym + " missing output.latex (needed for display)";
-	if(!Symbols.symbols[sym].attrs.name) throw "Symbol " + sym + " missing attrs.name (needed for text output)";
-	if(!Symbols.symbols[sym].attrs.group) throw "Symbol " + sym + " missing attrs.group (needed for mobile)";
-        //for(var i = 0; i < sym.length; i++)
-        //    if(sym.substring(0,i) in Symbols.symbols) throw "WARNING: Symbols are not prefix free: '" + sym.substring(0,i) + "' and '" + sym + "' are both symbols";
+Symbols.validate = function () {
+    for (var sym in Symbols.symbols) {
+        if (!Symbols.symbols[sym].output.latex) throw "Symbol " + sym + " missing output.latex (needed for display)";
+        if (!Symbols.symbols[sym].attrs.name) throw "Symbol " + sym + " missing attrs.name (needed for text output)";
+        if (!Symbols.symbols[sym].attrs.group) throw "Symbol " + sym + " missing attrs.group (needed for mobile)";
     }
 }
 
 // Returns an array with alternating text and argument elements of the form
 // {"type":"text", "val":the_text} or {"type":"arg", "index":the_index, "seperators":[sep1,sep2,...]}
-Symbols.split_output = function(output){
-    var regex = /\{\$([0-9]+)/g, result, starts = [], indices = [], i;
+Symbols.split_output = function (output) {
+    var regex = /\{\$([0-9]+)/g,
+        result, starts = [],
+        indices = [],
+        i;
     var ans = [];
-    while ((result = regex.exec(output))){
+    while ((result = regex.exec(output))) {
         starts.push(result.index);
         indices.push(parseInt(result[1]));
     }
-    ans.push({"type":"text","val":output.substring(0,starts.length > 0 ? starts[0] : output.length)}); // Push the first text bit
-    for(i = 0; i < starts.length; i++){
-        var idx = starts[i]+1;
+    ans.push({
+        "type": "text",
+        "val": output.substring(0, starts.length > 0 ? starts[0] : output.length)
+    }); // Push the first text bit
+    for (i = 0; i < starts.length; i++) {
+        var idx = starts[i] + 1;
         var separators = [];
         var sep = "";
         var opens = 1
-        while(opens > 0 && idx < output.length){
-            if(output[idx] == "}"){
-                if(opens == 2){ separators.push(sep); sep = ""; }
-                opens--; }
-            if(opens >= 2){ sep += output[idx]; }
-            if(output[idx] == "{"){ opens++; }
+        while (opens > 0 && idx < output.length) {
+            if (output[idx] == "}") {
+                if (opens == 2) {
+                    separators.push(sep);
+                    sep = "";
+                }
+                opens--;
+            }
+            if (opens >= 2) {
+                sep += output[idx];
+            }
+            if (output[idx] == "{") {
+                opens++;
+            }
             idx++;
         }
-        ans.push({"type":"arg","index":indices[i],"separators":separators});
-        var next = (i == starts.length - 1) ? output.length : starts[i+1];
-        ans.push({"type":"text","val":output.substring(idx,next)}); // Push the next text bit
+        ans.push({
+            "type": "arg",
+            "index": indices[i],
+            "separators": separators
+        });
+        var next = (i == starts.length - 1) ? output.length : starts[i + 1];
+        ans.push({
+            "type": "text",
+            "val": output.substring(idx, next)
+        }); // Push the next text bit
     }
     return ans;
 }
 
-Symbols.add_blanks = function(output, blank){
+Symbols.add_blanks = function (output, blank) {
     var out = Symbols.split_output(output);
     var ans = "";
-    for(var i = 0; i < out.length; i++){
-        if(out[i]["type"] == "text"){
+    for (var i = 0; i < out.length; i++) {
+        if (out[i]["type"] == "text") {
             ans += out[i]['val'];
-        }
-        else ans += blank;
+        } else ans += blank;
     }
     return ans;
 }
 
-Symbols.symbol_to_node = function(s, content, base){
-    
+Symbols.symbol_to_node = function (s, content, base) {
+
     // s is a symbol
     //
     // content is a list of nodes to insert
     var f = base.createElement("f");
-    for(var attr in s.attrs){
+    for (var attr in s.attrs) {
         f.setAttribute(attr, s.attrs[attr]);
     }
-    if("ast" in s){
-        if("type" in s.ast) f.setAttribute("ast_type",s.ast["type"])
-        if("value" in s.ast) f.setAttribute("ast_value",s.ast["value"])
+    if ("ast" in s) {
+        if ("type" in s.ast) f.setAttribute("ast_type", s.ast["type"])
+        if ("value" in s.ast) f.setAttribute("ast_value", s.ast["value"])
     }
-    //if(s['char']) f.setAttribute("c","yes");
-    
-    var first_ref=-1, arglist = [];
+
+    var first_ref = -1,
+        arglist = [];
     var first, i;
-    
-    // Make the b nodes for rendering each output    
-    for(var t in s["output"]){
+
+    // Make the b nodes for rendering each output
+    for (var t in s["output"]) {
         var b = base.createElement("b");
-        b.setAttribute("p",t);
+        b.setAttribute("p", t);
 
         var out = Symbols.split_output(s["output"][t]);
-        for(i = 0; i < out.length; i++){
-            if(out[i]["type"] == "text"){
-                if(out[i]["val"].length > 0) b.appendChild(base.createTextNode(out[i]['val']));
-            }
-            else{
-                if(t == 'latex') arglist.push(out[i]);
+        for (i = 0; i < out.length; i++) {
+            if (out[i]["type"] == "text") {
+                if (out[i]["val"].length > 0) b.appendChild(base.createTextNode(out[i]['val']));
+            } else {
+                if (t == 'latex') arglist.push(out[i]);
                 var nt = base.createElement("r");
-                nt.setAttribute("ref",out[i]["index"]);
-                if(out[i]["separators"].length > 0) nt.setAttribute("d",out[i]["separators"].length);
-                for(var j = 0; j < out[i]["separators"].length; j++) nt.setAttribute("sep"+j,out[i]["separators"][j]);
-                if(t == 'latex' && first_ref == -1) first_ref = out[i]["index"];
+                nt.setAttribute("ref", out[i]["index"]);
+                if (out[i]["separators"].length > 0) nt.setAttribute("d", out[i]["separators"].length);
+                for (var j = 0; j < out[i]["separators"].length; j++) nt.setAttribute("sep" + j, out[i]["separators"][j]);
+                if (t == 'latex' && first_ref == -1) first_ref = out[i]["index"];
                 b.appendChild(nt);
             }
         }
         f.appendChild(b);
     }
     // Now make the c/l nodes for storing the content
-    for(i = 0; i < arglist.length; i++){
+    for (i = 0; i < arglist.length; i++) {
         var a = arglist[i];
         var nc;
-        if(i in content && a['separators'].length > 0) {  // If the content for this node is provided and is an array, then dig down to find the first c child
+        if (i in content && a['separators'].length > 0) { // If the content for this node is provided and is an array, then dig down to find the first c child
             f.appendChild(content[i][0]);
             nc = content[i][0];
-            while(nc.nodeName != "c")
+            while (nc.nodeName != "c")
                 nc = nc.firstChild;
-        }
-        else if(i in content) {                                  // If the content for this node is provided and not an array, create the c node and populate its content
+        } else if (i in content) { // If the content for this node is provided and not an array, create the c node and populate its content
             var node_list = content[i];
             nc = base.createElement("c");
-            for(var se = 0; se < node_list.length; se++)
+            for (var se = 0; se < node_list.length; se++)
                 nc.appendChild(node_list[se].cloneNode(true));
             f.appendChild(nc)
-        }
-        else{                                             // Otherwise create the c node and possibly l nodes
+        } else { // Otherwise create the c node and possibly l nodes
             nc = base.createElement("c");
             var new_e = base.createElement("e");
             new_e.appendChild(base.createTextNode(""));
             nc.appendChild(new_e);
-            var par = f;                                  // Now we add nested l elements if this is an array of dimension > 0
-            for(j = 0; j < a['separators'].length; j++){
+            var par = f; // Now we add nested l elements if this is an array of dimension > 0
+            for (j = 0; j < a['separators'].length; j++) {
                 var nl = base.createElement("l");
-                nl.setAttribute("s","1");
+                nl.setAttribute("s", "1");
                 par.appendChild(nl);
                 par = nl;
             }
             par.appendChild(nc);
         }
-        if(i+1 == first_ref) first = nc.lastChild;        // Note the first node we should visit based on the LaTeX output
-        if(s['args'] && s['args'][i]){                    // Set the arguments for the c node based on the symbol
-            for(var arg in s['args'][i]){
-                nc.setAttribute(arg,s['args'][i][arg]);
+        if (i + 1 == first_ref) first = nc.lastChild; // Note the first node we should visit based on the LaTeX output
+        if (s['args'] && s['args'][i]) { // Set the arguments for the c node based on the symbol
+            for (var arg in s['args'][i]) {
+                nc.setAttribute(arg, s['args'][i][arg]);
             }
         }
     }
-    return {"f":f, "first":first, "args":arglist};
+    return {
+        "f": f,
+        "first": first,
+        "args": arglist
+    };
 }
 
 
 module.exports = Symbols;
-
 },{"./version.js":11}],10:[function(require,module,exports){
 var Utils = {};
 
@@ -3572,67 +3906,66 @@ Utils.SEL_CARET = "\\cursor[-0.2ex]{0.7em}"
 Utils.SMALL_SEL_CARET = "\\cursor{0.7ex}"
 Utils.SEL_COLOR = "red"
 
-Utils.is_blank = function(n){
+Utils.is_blank = function (n) {
     return n.firstChild == null || n.firstChild.nodeValue == '';
 }
 
-Utils.get_length = function(n){
-    if(Utils.is_blank(n) || n.nodeName == 'f') return 0
+Utils.get_length = function (n) {
+    if (Utils.is_blank(n) || n.nodeName == 'f') return 0
     return n.firstChild.nodeValue.length;
 }
 
-Utils.path_to = function(n){
+Utils.path_to = function (n) {
     var name = n.nodeName;
-    if(name == "m") return "guppy_loc_m";
+    if (name == "m") return "guppy_loc_m";
     var ns = 0;
-    for(var nn = n; nn != null; nn = nn.previousSibling) if(nn.nodeType == 1 && nn.nodeName == name) ns++;
-    return Utils.path_to(n.parentNode)+"_"+name+""+ns;
+    for (var nn = n; nn != null; nn = nn.previousSibling)
+        if (nn.nodeType == 1 && nn.nodeName == name) ns++;
+    return Utils.path_to(n.parentNode) + "_" + name + "" + ns;
 }
 
-Utils.is_text = function(nn){
+Utils.is_text = function (nn) {
     return nn.parentNode.hasAttribute("mode") && (nn.parentNode.getAttribute("mode") == "text" || nn.parentNode.getAttribute("mode") == "symbol");
 }
 
-Utils.is_char = function(nn){
-    for(var n = nn.firstChild; n; n = n.nextSibling){
-	if(n.nodeName == "c" || n.nodeName == "l") return false;
+Utils.is_char = function (nn) {
+    for (var n = nn.firstChild; n; n = n.nextSibling) {
+        if (n.nodeName == "c" || n.nodeName == "l") return false;
     }
     return true;
 }
 
-Utils.is_symbol = function(nn){
+Utils.is_symbol = function (nn) {
     return nn.parentNode.getAttribute("mode") && nn.parentNode.getAttribute("mode") == "symbol";
 }
 
-Utils.is_small = function(nn){
+Utils.is_small = function (nn) {
     var n = nn.parentNode;
-    while(n != null && n.nodeName != 'm'){
-        if(n.getAttribute("small") == "yes"){
+    while (n != null && n.nodeName != 'm') {
+        if (n.getAttribute("small") == "yes") {
             return true;
         }
         n = n.parentNode
-        while(n != null && n.nodeName != 'c')
+        while (n != null && n.nodeName != 'c')
             n = n.parentNode;
     }
     return false;
 }
 
 module.exports = Utils;
-
 },{}],11:[function(require,module,exports){
 var Version = {}
 Version.GUPPY_VERSION = "2.0.0-alpha.1";
 Version.DOC_VERSION = "1.2.0";
 Version.SYMBOL_VERSION = "2.0.0-alpha.3";
 
-Version.DOC_ERROR = function(id, found_ver){
+Version.DOC_ERROR = function (id, found_ver) {
     throw Error("Document version mismatch for " + id + ": Found " + found_ver + ", required " + Version.DOC_VERSION + ".  To update your document, please see daniel3735928559.github.io/guppy/doc/version.html");
 }
 
-Version.SYMBOL_ERROR = function(id, found_ver){
+Version.SYMBOL_ERROR = function (id, found_ver) {
     throw Error("Symbol version mismatch for " + id + ": Found " + found_ver + ", required " + Version.SYMBOL_VERSION + ".  To update your document, please see daniel3735928559.github.io/guppy/doc/version.html");
 }
 module.exports = Version
-
 },{}]},{},[6])(6)
 });

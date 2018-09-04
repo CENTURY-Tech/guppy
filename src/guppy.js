@@ -569,9 +569,21 @@ Guppy.prototype.select_to = function (x, y, mouse) {
 
 
 window.addEventListener("mousedown", Guppy.mouse_down, true);
-window.addEventListener("touchstart", Guppy.mouse_down, true);
 window.addEventListener("mouseup", Guppy.mouse_up, true);
 window.addEventListener("mousemove", Guppy.mouse_move, false);
+
+var scrolling = false;
+window.addEventListener("touchstart", function () {
+  scrolling = false;
+}, true);
+window.addEventListener("touchmove", function () {
+  scrolling = true;
+}, true);
+window.addEventListener("touchend", function (e) {
+  if (!scrolling) {
+    f.mouse_down(e);
+  }
+}, true);
 
 Guppy.prototype.render_node = function (t) {
     // All the interesting work is done by transform.  This function just adds in the cursor and selection-start cursor
