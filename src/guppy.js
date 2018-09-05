@@ -581,7 +581,7 @@ window.addEventListener("touchmove", function () {
 }, true);
 window.addEventListener("touchend", function (e) {
   if (!scrolling) {
-    f.mouse_down(e);
+    Guppy.mouse_down(e);
   }
 }, true);
 
